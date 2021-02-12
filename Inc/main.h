@@ -43,7 +43,9 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "usbd_cdc_if.h"
+#include "scpi/scpi.h"
+#include "scpi-def.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

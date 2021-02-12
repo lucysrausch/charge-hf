@@ -24,6 +24,10 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stm32g4xx_ll_hrtim.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "usb_device.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -60,6 +64,10 @@ OPAMP_HandleTypeDef hopamp2;
 PCD_HandleTypeDef hpcd_USB_FS;
 
 /* USER CODE BEGIN PV */
+/* SCPI bbuffer */
+extern uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
+extern uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
+uint8_t is_new_data_ready;
 
 /* This is the VDDA supply in mV */
 #define VDDA            ((uint16_t)3300)
@@ -142,6 +150,15 @@ int main(void)
   MX_UCPD1_Init();
   MX_USB_PCD_Init();
   /* USER CODE BEGIN 2 */
+  MX_USB_Device_Init();
+
+  SCPI_Init(&scpi_context,
+      scpi_commands,
+      &scpi_interface,
+      scpi_units_def,
+      SCPI_IDN1, SCPI_IDN2, SCPI_IDN3, SCPI_IDN4,
+      scpi_input_buffer, SCPI_INPUT_BUFFER_LENGTH,
+      scpi_error_queue_data, SCPI_ERROR_QUEUE_SIZE);
 
   /* Run the ADC2 calibration in single-ended mode */
   HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
