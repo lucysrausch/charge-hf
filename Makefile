@@ -22,7 +22,7 @@ TARGET = charge-hf
 # debug build?
 DEBUG = 1
 # optimization
-OPT = -Og
+OPT = -Os
 
 
 #######################################
@@ -83,7 +83,7 @@ USB_Device/App/usb_device.c \
 USB_Device/Target/usbd_conf.c \
 USB_Device/App/usbd_desc.c \
 Src/scpi-def.c \
-Src/scpi.c \
+Src/scpi-com.c \
 libscpi/src/error.c \
 libscpi/src/expression.c \
 libscpi/src/fifo.c \
