@@ -37,14 +37,12 @@ static double output = 1337.23f;
 
 static scpi_result_t SEPIC_MeasureVoltageIn(scpi_t * context) {
     SCPI_ResultDouble(context, output);
-    SCPI_ResultUInt32(context, voltage);
 
     return SCPI_RES_OK;
 }
 
 static scpi_result_t SEPIC_MeasureVoltageOut(scpi_t * context) {
     SCPI_ResultUInt32(context, voltage);
-    SCPI_ResultDouble(context, output);
 
     return SCPI_RES_OK;
 }
