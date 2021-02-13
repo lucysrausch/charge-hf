@@ -47,6 +47,7 @@
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 ADC_HandleTypeDef hadc2;
+DMA_HandleTypeDef hdma_adc2;
 
 COMP_HandleTypeDef hcomp1;
 COMP_HandleTypeDef hcomp3;
@@ -70,24 +71,21 @@ extern uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
 uint8_t is_new_data_ready;
 uint16_t new_data_length;
 
-/* This is the VDDA supply in mV */
-#define VDDA            ((uint16_t)3300)
+volatile sepic_control_t sepic = {
+  .Vset = 5.0,
+  .Iset = 3.0
+};
 
+volatile knobs_t knobs;
 
-/* Deadtime values for GaN stage */
-#define HF_PERIOD       ((uint32_t)680)
-#define DT_RISING       ((uint16_t)0)
-#define DT_FALLING      ((uint16_t)0)
-
-#define SEPIC_PERIOD    ((uint32_t)16383)
-
-__IO uint32_t Vin, Vout;
+uint16_t adc2_regular_buf[2];
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_ADC2_Init(void);
 static void MX_COMP1_Init(void);
@@ -106,6 +104,21 @@ static void MX_USB_PCD_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void HAL_HRTIM_RepetitionEventCallback(HRTIM_HandleTypeDef * hhrtim, uint32_t TimerIdx) {
+  if (TimerIdx == HRTIM_TIMERINDEX_TIMER_D) {
+    sepic.Icycle = (HAL_ADCEx_InjectedGetValue(&hadc2, ADC_INJECTED_RANK_1) * VDDA)/0xFFF;
+    sepic.Icycle = sepic.Icycle / (0.01 * 64.0); // 10m sense, OPAMP2 64 Gain
+
+    sepic.Vout = (HAL_ADCEx_InjectedGetValue(&hadc2, ADC_INJECTED_RANK_2) * VDDA)/0xFFF;
+    sepic.Vout = sepic.Vout / (5100.0 / (100000.0 + 5100.0)); // 100k by 5k1 divider
+
+    sepic.Iin = (HAL_ADCEx_InjectedGetValue(&hadc2, ADC_INJECTED_RANK_3) * VDDA)/0xFFF;
+    sepic.Iin = sepic.Iin / (0.01 * (2000.0 / 33.0)); // Si8540, 10m sense, 2k Rout, 33R Rg
+
+    sepic.Vin = (HAL_ADCEx_InjectedGetValue(&hadc2, ADC_INJECTED_RANK_4) * VDDA)/0xFFF;
+    sepic.Vin = sepic.Vin / (5100.0 / (5100.0 + 5100.0)); // 5k1 by 5k1 divider
+  }
+}
 
 /* USER CODE END 0 */
 
@@ -138,6 +151,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_ADC1_Init();
   MX_ADC2_Init();
   MX_COMP1_Init();
@@ -179,23 +193,22 @@ int main(void)
   LL_HRTIM_TIM_CounterEnable(HRTIM1, LL_HRTIM_TIMER_C);
   LL_HRTIM_TIM_CounterEnable(HRTIM1, LL_HRTIM_TIMER_D);
 
-  LL_HRTIM_TIM_SetCompare1(HRTIM1, LL_HRTIM_TIMER_D, 0);
+  LL_HRTIM_TIM_SetCompare1(HRTIM1, LL_HRTIM_TIMER_D, 2000);
+
+  HAL_ADC_Start_DMA(&hadc2, (uint32_t *)adc2_regular_buf, 2);
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  uint32_t i = 0;
   while (1)
   {
-    /* -------------------------------------------------------------------------*/
-    /* Input and output voltages measures (can be displayed in a watch window)  */
-    /* -------------------------------------------------------------------------*/
-    Vin = (HAL_ADCEx_InjectedGetValue(&hadc2, ADC_INJECTED_RANK_4) * VDDA)/0xFFF;
-    //Vin = (497 * Vin )/100; /* Values in mV (for debug convenience) */
-
-    Vout = (HAL_ADCEx_InjectedGetValue(&hadc2, ADC_INJECTED_RANK_2) * VDDA)/0xFFF;
-    //Vout = (503 * Vout)/100; /* Values in mV (for debug convenience) */
-
+    i++;
+    if (i % 100000 == 0) {
+      knobs.knob1 = (adc2_regular_buf[0] * VDDA)/0xFFF;
+      knobs.knob2 = (adc2_regular_buf[1] * VDDA)/0xFFF;
+    }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -352,15 +365,15 @@ static void MX_ADC2_Init(void)
   hadc2.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc2.Init.GainCompensation = 0;
   hadc2.Init.ScanConvMode = ADC_SCAN_ENABLE;
-  hadc2.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc2.Init.EOCSelection = ADC_EOC_SEQ_CONV;
   hadc2.Init.LowPowerAutoWait = DISABLE;
-  hadc2.Init.ContinuousConvMode = DISABLE;
+  hadc2.Init.ContinuousConvMode = ENABLE;
   hadc2.Init.NbrOfConversion = 2;
   hadc2.Init.DiscontinuousConvMode = DISABLE;
   hadc2.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc2.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc2.Init.DMAContinuousRequests = DISABLE;
-  hadc2.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+  hadc2.Init.DMAContinuousRequests = ENABLE;
+  hadc2.Init.Overrun = ADC_OVR_DATA_OVERWRITTEN;
   hadc2.Init.OversamplingMode = DISABLE;
   if (HAL_ADC_Init(&hadc2) != HAL_OK)
   {
@@ -370,7 +383,7 @@ static void MX_ADC2_Init(void)
   */
   sConfigInjected.InjectedChannel = ADC_CHANNEL_VOPAMP2;
   sConfigInjected.InjectedRank = ADC_INJECTED_RANK_1;
-  sConfigInjected.InjectedSamplingTime = ADC_SAMPLETIME_92CYCLES_5;
+  sConfigInjected.InjectedSamplingTime = ADC_SAMPLETIME_47CYCLES_5;
   sConfigInjected.InjectedSingleDiff = ADC_SINGLE_ENDED;
   sConfigInjected.InjectedOffsetNumber = ADC_OFFSET_NONE;
   sConfigInjected.InjectedOffset = 0;
@@ -413,7 +426,7 @@ static void MX_ADC2_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_4;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_247CYCLES_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_47CYCLES_5;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
   sConfig.Offset = 0;
@@ -864,7 +877,7 @@ static void MX_OPAMP2_Init(void)
   hopamp2.Init.InternalOutput = ENABLE;
   hopamp2.Init.TimerControlledMuxmode = OPAMP_TIMERCONTROLLEDMUXMODE_DISABLE;
   hopamp2.Init.PgaConnect = OPAMP_PGA_CONNECT_INVERTINGINPUT_IO0;
-  hopamp2.Init.PgaGain = OPAMP_PGA_GAIN_16_OR_MINUS_15;
+  hopamp2.Init.PgaGain = OPAMP_PGA_GAIN_64_OR_MINUS_63;
   hopamp2.Init.UserTrimming = OPAMP_TRIMMING_FACTORY;
   if (HAL_OPAMP_Init(&hopamp2) != HAL_OK)
   {
@@ -930,6 +943,23 @@ static void MX_USB_PCD_Init(void)
   /* USER CODE BEGIN USB_Init 2 */
 
   /* USER CODE END USB_Init 2 */
+
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMAMUX1_CLK_ENABLE();
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 
 }
 

@@ -50,7 +50,20 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
+typedef struct{
+	float Vin;
+	float Vout;
+	float Iin;
+  float Icycle;
 
+  float Vset;
+  float Iset;
+} sepic_control_t;
+
+typedef struct{
+	float knob1;
+	float knob2;
+} knobs_t;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -82,6 +95,18 @@ void Error_Handler(void);
 #define BOOT_Pin GPIO_PIN_8
 #define BOOT_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
+/* This is the VDDA supply in V */
+#define VDDA            ((float)3.3f)
+
+/* Deadtime values for GaN stage */
+#define HF_PERIOD       ((uint32_t)680)
+#define DT_RISING       ((uint16_t)0)
+#define DT_FALLING      ((uint16_t)0)
+
+#define SEPIC_PERIOD    ((uint32_t)16383)
+
+#define SEPIC_VMAX      ((float)    60.0)
+#define SEPIC_IMAX      ((float)     3.0)
 
 /* USER CODE END Private defines */
 

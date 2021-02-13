@@ -31,69 +31,74 @@
 #include <string.h>
 #include "scpi/scpi.h"
 #include "scpi-def.h"
+#include "main.h"
 
-static uint32_t voltage = 1337;
-static double output = 1337.23f;
+extern sepic_control_t sepic;
+extern knobs_t knobs;
 
 static scpi_result_t SEPIC_MeasureVoltageIn(scpi_t * context) {
-    SCPI_ResultDouble(context, output);
-
-    return SCPI_RES_OK;
+    return SCPI_ResultDouble(context, sepic.Vin);
 }
 
 static scpi_result_t SEPIC_MeasureVoltageOut(scpi_t * context) {
-    SCPI_ResultUInt32(context, voltage);
-
-    return SCPI_RES_OK;
+    return SCPI_ResultDouble(context, sepic.Vout);
 }
 
-static scpi_result_t DMM_MeasureVoltageAcQ(scpi_t * context) {
-    scpi_number_t param1, param2;
-    char bf1[15];
-    char bf2[15];
-    char _err[150] = {0};
-
-    /* read first parameter if present */
-    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &param1, FALSE)) {
-        /* do something, if parameter not present */
-    }
-
-    /* read second paraeter if present */
-    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &param2, FALSE)) {
-        /* do something, if parameter not present */
-    }
-
-
-    SCPI_NumberToStr(context, scpi_special_numbers_def, &param1, bf1, 15);
-
-
-
-    SCPI_NumberToStr(context, scpi_special_numbers_def, &param2, bf2, 15);
-
-    sprintf(_err, "meas:volt:ac\r\n\tP1=%s\r\n\tP2=%s\r\n", bf1, bf2);
-    CDC_Transmit_FS(_err, 150);
-
-    SCPI_ResultDouble(context, 0);
-
-    return SCPI_RES_OK;
+static scpi_result_t SEPIC_MeasureCurrentIn(scpi_t * context) {
+    return SCPI_ResultDouble(context, sepic.Iin);
 }
 
-static scpi_result_t DMM_ConfigureVoltageDc(scpi_t * context) {
-    double param1, param2;
-    char _err[150] = {0};
+static scpi_result_t CONTROL_MeasureVoltageKnobs(scpi_t * context) {
+  uint32_t param;
+
+  /* read first parameter if present */
+  if (!SCPI_ParamUInt32(context, &param, TRUE)) {
+      return SCPI_RES_ERR;
+  }
+
+  if (param == 1) {
+    return SCPI_ResultDouble(context, knobs.knob1);
+  } else if (param == 2) {
+    return SCPI_ResultDouble(context, knobs.knob2);
+  } else {
+    return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+  }
+}
+
+static scpi_result_t SEPIC_ConfigureVoltageOut(scpi_t * context) {
+    float param;
 
     /* read first parameter if present */
-    if (!SCPI_ParamDouble(context, &param1, TRUE)) {
+    if (!SCPI_ParamFloat(context, &param, TRUE)) {
         return SCPI_RES_ERR;
     }
 
-    /* read second paraeter if present */
-    if (!SCPI_ParamDouble(context, &param2, FALSE)) {
-        /* do something, if parameter not present */
+    if (param < 0) {
+      return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+    } else if (param > SEPIC_VMAX) {
+      return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+    } else {
+      sepic.Vset = param;
     }
 
-    sprintf(_err, "conf:volt:dc\r\n\tP1=%lf\r\n\tP2=%lf\r\n", param1, param2);
-    CDC_Transmit_FS(_err, 150);
+    return SCPI_RES_OK;
+}
+
+static scpi_result_t SEPIC_ConfigureCurrentIn(scpi_t * context) {
+    float param;
+
+    /* read first parameter if present */
+    if (!SCPI_ParamFloat(context, &param, TRUE)) {
+        return SCPI_RES_ERR;
+    }
+
+    if (param < 0) {
+      return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+    } else if (param > SEPIC_IMAX) {
+      return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+    } else {
+      sepic.Iset = param;
+    }
 
     return SCPI_RES_OK;
 }
@@ -229,13 +234,11 @@ const scpi_command_t scpi_commands[] = {
 
     /* SEPIC */
     {.pattern = "MEASure:VOLTage:DC:INput?", .callback = SEPIC_MeasureVoltageIn,},
-
     {.pattern = "MEASure:VOLTage:DC:OUTput?", .callback = SEPIC_MeasureVoltageOut,},
-  /*  {.pattern = "CONFigure:VOLTage:DC:OUTput", .callback = SEPIC_ConfigureVoltageOut,}
-    ,
+    {.pattern = "CONFigure:VOLTage:DC:OUTput", .callback = SEPIC_ConfigureVoltageOut,},
     {.pattern = "MEASure:CURRent:DC:INput?", .callback = SEPIC_MeasureCurrentIn,},
     {.pattern = "CONFigure:CURRent:DC:INput", .callback = SEPIC_ConfigureCurrentIn,},
-*/
+
     /* HF AMP */
     {.pattern = "MEASure:CURRent:AC?", .callback = SCPI_StubQ,},
     {.pattern = "MEASure:RESistance?", .callback = SCPI_StubQ,},
@@ -243,11 +246,14 @@ const scpi_command_t scpi_commands[] = {
     {.pattern = "MEASure:FREQuency?", .callback = SCPI_StubQ,},
     {.pattern = "MEASure:PERiod?", .callback = SCPI_StubQ,},
 
-    {.pattern = "TEST:BOOL", .callback = TEST_Bool,},
-    {.pattern = "TEST:CHOice?", .callback = TEST_ChoiceQ,},
-    {.pattern = "TEST#:NUMbers#", .callback = TEST_Numbers,},
-    {.pattern = "TEST:TEXT", .callback = TEST_Text,},
-    {.pattern = "TEST:ARBitrary?", .callback = TEST_ArbQ,},
+    /* Knobs */
+    {.pattern = "MEASure:VOLTage:DC:CONTrol?", .callback = CONTROL_MeasureVoltageKnobs,},
+
+    //{.pattern = "TEST:BOOL", .callback = TEST_Bool,},
+    //{.pattern = "TEST:CHOice?", .callback = TEST_ChoiceQ,},
+    //{.pattern = "TEST#:NUMbers#", .callback = TEST_Numbers,},
+    //{.pattern = "TEST:TEXT", .callback = TEST_Text,},
+    //{.pattern = "TEST:ARBitrary?", .callback = TEST_ArbQ,},
 
     SCPI_CMD_LIST_END
 };
