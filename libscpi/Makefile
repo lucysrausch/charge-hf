@@ -102,6 +102,3 @@ $(TESTDIR)/%.o: $(TESTDIR)/%.c
 
 $(TESTDIR)/%.test: $(TESTDIR)/%.o $(DISTDIR)/$(STATICLIB)
 	$(CC) $< -o $@ $(DISTDIR)/$(STATICLIB) $(TESTLDFLAGS)
-
-
-

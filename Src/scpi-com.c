@@ -34,7 +34,9 @@
 
 size_t SCPI_Write(scpi_t * context, const char * data, size_t len) {
     (void) context;
-    return CDC_Transmit_FS(data, len);
+
+    while (CDC_Transmit_FS(data, len));
+    return SCPI_RES_OK;
 }
 
 scpi_result_t SCPI_Flush(scpi_t * context) {

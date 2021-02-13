@@ -68,6 +68,7 @@ PCD_HandleTypeDef hpcd_USB_FS;
 extern uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
 extern uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
 uint8_t is_new_data_ready;
+uint16_t new_data_length;
 
 /* This is the VDDA supply in mV */
 #define VDDA            ((uint16_t)3300)
@@ -112,8 +113,6 @@ static void MX_USB_PCD_Init(void);
   * @brief  The application entry point.
   * @retval int
   */
-
-
 int main(void)
 {
   /* USER CODE BEGIN 1 */
@@ -200,6 +199,10 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    if (is_new_data_ready) {
+      SCPI_Input(&scpi_context, UserRxBufferFS, new_data_length);
+      is_new_data_ready = 0;
+    }
   }
   /* USER CODE END 3 */
 }
