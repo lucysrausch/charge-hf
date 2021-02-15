@@ -61,6 +61,15 @@ typedef struct{
 } sepic_control_t;
 
 typedef struct{
+	float Vout;
+	float Iout;
+
+  uint32_t freq;
+  uint16_t DTrising;
+	uint16_t DTfalling;
+} hf_control_t;
+
+typedef struct{
 	float knob1;
 	float knob2;
 } knobs_t;
@@ -100,13 +109,13 @@ void Error_Handler(void);
 
 /* Deadtime values for GaN stage */
 #define HF_PERIOD       ((uint32_t)680)
-#define DT_RISING       ((uint16_t)0)
-#define DT_FALLING      ((uint16_t)0)
 
 #define SEPIC_PERIOD    ((uint32_t)16383)
 
 #define SEPIC_VMAX      ((float)    60.0)
 #define SEPIC_IMAX      ((float)     3.0)
+
+#define HF_FMAX         ((uint32_t)10000000)
 
 /* USER CODE END Private defines */
 

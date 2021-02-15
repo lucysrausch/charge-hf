@@ -31,10 +31,12 @@
 #include <string.h>
 #include "scpi/scpi.h"
 #include "scpi-def.h"
+#include "stm32g4xx_ll_hrtim.h"
 #include "main.h"
 
 extern sepic_control_t sepic;
 extern knobs_t knobs;
+extern hf_control_t hf;
 
 static scpi_result_t SEPIC_MeasureVoltageIn(scpi_t * context) {
     return SCPI_ResultDouble(context, sepic.Vin);
@@ -88,13 +90,13 @@ static scpi_result_t SEPIC_ConfigureCurrentIn(scpi_t * context) {
     float param;
 
     /* read first parameter if present */
-    if (!SCPI_ParamFloat(context, &param, TRUE)) {
+    if (!SCPI_ParamUInt32(context, &param, TRUE)) {
         return SCPI_RES_ERR;
     }
 
     if (param < 0) {
       return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
-    } else if (param > SEPIC_IMAX) {
+    } else if (param > HF_FMAX) {
       return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
     } else {
       sepic.Iset = param;
@@ -102,6 +104,55 @@ static scpi_result_t SEPIC_ConfigureCurrentIn(scpi_t * context) {
 
     return SCPI_RES_OK;
 }
+
+static scpi_result_t HF_ConfigureFrequency(scpi_t * context) {
+    uint32_t param;
+
+    /* read first parameter if present */
+    if (!SCPI_ParamUInt32(context, &param, TRUE)) {
+        return SCPI_RES_ERR;
+    }
+
+    if (param < 10000) {
+      return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+    } else if (param > HF_FMAX) {
+      return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+    } else {
+      hf.freq = param;
+      uint32_t period = (144000*32) / (uint32_t)(hf.freq / 1000);
+      LL_HRTIM_TIM_SetPeriod(HRTIM1, LL_HRTIM_TIMER_C, period);
+      LL_HRTIM_TIM_SetCompare1(HRTIM1, LL_HRTIM_TIMER_C, period / 2);
+    }
+
+    return SCPI_RES_OK;
+}
+
+static scpi_result_t HF_ConfigureDeadtime(scpi_t * context) {
+    uint32_t rising, falling;
+
+    /* read first parameter if present */
+    if (!SCPI_ParamUInt32(context, &rising, TRUE)) {
+        return SCPI_RES_ERR;
+    }
+
+    if (!SCPI_ParamUInt32(context, &falling, TRUE)) {
+        return SCPI_RES_ERR;
+    }
+
+    if (rising < 0 || falling < 0) {
+      return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+    } else if (rising > 511 || falling > 511) {
+      return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+    } else {
+      hf.DTrising = rising;
+      hf.DTfalling = falling;
+      LL_HRTIM_DT_SetRisingValue(HRTIM1, LL_HRTIM_TIMER_C, rising);
+      LL_HRTIM_DT_SetFallingValue(HRTIM1, LL_HRTIM_TIMER_C, falling);
+    }
+
+    return SCPI_RES_OK;
+}
+
 
 static scpi_result_t TEST_Bool(scpi_t * context) {
     scpi_bool_t param1;
@@ -240,6 +291,8 @@ const scpi_command_t scpi_commands[] = {
     {.pattern = "CONFigure:CURRent:DC:INput", .callback = SEPIC_ConfigureCurrentIn,},
 
     /* HF AMP */
+    {.pattern = "CONFigure:FREQuency", .callback = HF_ConfigureFrequency,},
+    {.pattern = "CONFigure:DEADtime", .callback = HF_ConfigureDeadtime,},
     {.pattern = "MEASure:CURRent:AC?", .callback = SCPI_StubQ,},
     {.pattern = "MEASure:RESistance?", .callback = SCPI_StubQ,},
     {.pattern = "MEASure:FRESistance?", .callback = SCPI_StubQ,},
