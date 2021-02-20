@@ -1,0 +1,5 @@
+(sym_lib_table
+  (lib (name otter)(type Legacy)(uri /home/niklas/kicad/KiCAD-libs/otter.lib)(options "")(descr ""))
+  (lib (name pcbtc-rescue)(type Legacy)(uri /home/niklas/pcbtc/hardware/kicad/pcbtc-rescue.lib)(options "")(descr ""))
+  (lib (name LMG5200)(type Legacy)(uri ${KIPRJMOD}/LMG5200.lib)(options "")(descr ""))
+)

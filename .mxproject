@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=/home/niklas/neuralink/charge-hf/Inc
+HeaderPath=/home/niklas/neuralink/charge-hf-old/Inc
 HeaderFiles=stm32g4xx_it.h;stm32_assert.h;stm32g4xx_hal_conf.h;main.h;
-SourcePath=/home/niklas/neuralink/charge-hf/Src
+SourcePath=/home/niklas/neuralink/charge-hf-old/Src
 SourceFiles=stm32g4xx_it.c;stm32g4xx_hal_msp.c;main.c;
 
 [PreviousLibFiles]

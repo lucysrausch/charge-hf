@@ -1,0 +1,1584 @@
+ARM GAS  /tmp/cchzUUmK.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"units.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.global	__aeabi_dmul
+  18              		.section	.text.SCPI_ParamNumber,"ax",%progbits
+  19              		.align	1
+  20              		.global	SCPI_ParamNumber
+  21              		.arch armv7e-m
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  25              		.fpu fpv4-sp-d16
+  27              	SCPI_ParamNumber:
+  28              	.LVL0:
+  29              	.LFB3:
+  30              		.file 1 "libscpi/src/units.c"
+   1:libscpi/src/units.c **** /*-
+   2:libscpi/src/units.c ****  * BSD 2-Clause License
+   3:libscpi/src/units.c ****  *
+   4:libscpi/src/units.c ****  * Copyright (c) 2012-2018, Jan Breuer
+   5:libscpi/src/units.c ****  * All rights reserved.
+   6:libscpi/src/units.c ****  *
+   7:libscpi/src/units.c ****  * Redistribution and use in source and binary forms, with or without
+   8:libscpi/src/units.c ****  * modification, are permitted provided that the following conditions are met:
+   9:libscpi/src/units.c ****  *
+  10:libscpi/src/units.c ****  * * Redistributions of source code must retain the above copyright notice, this
+  11:libscpi/src/units.c ****  *   list of conditions and the following disclaimer.
+  12:libscpi/src/units.c ****  *
+  13:libscpi/src/units.c ****  * * Redistributions in binary form must reproduce the above copyright notice,
+  14:libscpi/src/units.c ****  *   this list of conditions and the following disclaimer in the documentation
+  15:libscpi/src/units.c ****  *   and/or other materials provided with the distribution.
+  16:libscpi/src/units.c ****  *
+  17:libscpi/src/units.c ****  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  18:libscpi/src/units.c ****  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  19:libscpi/src/units.c ****  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+  20:libscpi/src/units.c ****  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+  21:libscpi/src/units.c ****  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  22:libscpi/src/units.c ****  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  23:libscpi/src/units.c ****  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+  24:libscpi/src/units.c ****  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  25:libscpi/src/units.c ****  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  26:libscpi/src/units.c ****  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  27:libscpi/src/units.c ****  */
+  28:libscpi/src/units.c **** 
+ARM GAS  /tmp/cchzUUmK.s 			page 2
+
+
+  29:libscpi/src/units.c **** /**
+  30:libscpi/src/units.c ****  * @file   scpi_units.c
+  31:libscpi/src/units.c ****  * @date   Thu Nov 15 10:58:45 UTC 2012
+  32:libscpi/src/units.c ****  *
+  33:libscpi/src/units.c ****  * @brief  SCPI units
+  34:libscpi/src/units.c ****  *
+  35:libscpi/src/units.c ****  *
+  36:libscpi/src/units.c ****  */
+  37:libscpi/src/units.c **** 
+  38:libscpi/src/units.c **** #include <string.h>
+  39:libscpi/src/units.c **** #include "scpi/parser.h"
+  40:libscpi/src/units.c **** #include "scpi/units.h"
+  41:libscpi/src/units.c **** #include "utils_private.h"
+  42:libscpi/src/units.c **** #include "scpi/utils.h"
+  43:libscpi/src/units.c **** #include "scpi/error.h"
+  44:libscpi/src/units.c **** #include "lexer_private.h"
+  45:libscpi/src/units.c **** 
+  46:libscpi/src/units.c **** 
+  47:libscpi/src/units.c **** /*
+  48:libscpi/src/units.c ****  * multipliers IEEE 488.2-1992 tab 7-2
+  49:libscpi/src/units.c ****  * 1E18         EX
+  50:libscpi/src/units.c ****  * 1E15         PE
+  51:libscpi/src/units.c ****  * 1E12         T
+  52:libscpi/src/units.c ****  * 1E9          G
+  53:libscpi/src/units.c ****  * 1E6          MA (use M for OHM and HZ)
+  54:libscpi/src/units.c ****  * 1E3          K
+  55:libscpi/src/units.c ****  * 1E-3         M (disaalowed for OHM and HZ)
+  56:libscpi/src/units.c ****  * 1E-6         U
+  57:libscpi/src/units.c ****  * 1E-9         N
+  58:libscpi/src/units.c ****  * 1E-12        P
+  59:libscpi/src/units.c ****  * 1E-15        F
+  60:libscpi/src/units.c ****  * 1E-18        A
+  61:libscpi/src/units.c ****  */
+  62:libscpi/src/units.c **** 
+  63:libscpi/src/units.c **** /*
+  64:libscpi/src/units.c ****  * units definition IEEE 488.2-1992 tab 7-1
+  65:libscpi/src/units.c ****  */
+  66:libscpi/src/units.c **** const scpi_unit_def_t scpi_units_def[] = {
+  67:libscpi/src/units.c **** #if USE_UNITS_PARTICLES
+  68:libscpi/src/units.c ****     /* Absorbet dose */
+  69:libscpi/src/units.c ****     {/* name */ "GY", /* unit */ SCPI_UNIT_GRAY, /* mult */ 1},
+  70:libscpi/src/units.c **** 
+  71:libscpi/src/units.c ****     /* Activity of radionuclide */
+  72:libscpi/src/units.c ****     {/* name */ "BQ", /* unit */ SCPI_UNIT_BECQUEREL, /* mult */ 1},
+  73:libscpi/src/units.c **** 
+  74:libscpi/src/units.c ****     /* Amount of substance */
+  75:libscpi/src/units.c ****     {/* name */ "MOL", /* unit */ SCPI_UNIT_MOLE, /* mult */ 1},
+  76:libscpi/src/units.c **** 
+  77:libscpi/src/units.c ****     /* Dose equivalent */
+  78:libscpi/src/units.c ****     {/* name */ "NSV", /* unit */ SCPI_UNIT_SIEVERT, /* mult */ 1e-9},
+  79:libscpi/src/units.c ****     {/* name */ "USV", /* unit */ SCPI_UNIT_SIEVERT, /* mult */ 1e-6},
+  80:libscpi/src/units.c ****     {/* name */ "MSV", /* unit */ SCPI_UNIT_SIEVERT, /* mult */ 1e-3},
+  81:libscpi/src/units.c ****     {/* name */ "SV", /* unit */ SCPI_UNIT_SIEVERT, /* mult */ 1},
+  82:libscpi/src/units.c ****     {/* name */ "KSV", /* unit */ SCPI_UNIT_SIEVERT, /* mult */ 1e3},
+  83:libscpi/src/units.c ****     {/* name */ "MASV", /* unit */ SCPI_UNIT_SIEVERT, /* mult */ 1e6},
+  84:libscpi/src/units.c **** 
+  85:libscpi/src/units.c ****     /* Energy */
+ARM GAS  /tmp/cchzUUmK.s 			page 3
+
+
+  86:libscpi/src/units.c ****     {/* name */ "EV", /* unit */ SCPI_UNIT_ELECTRONVOLT, /* mult */ 1},
+  87:libscpi/src/units.c ****     {/* name */ "KEV", /* unit */ SCPI_UNIT_ELECTRONVOLT, /* mult */ 1e3},
+  88:libscpi/src/units.c ****     {/* name */ "MAEV", /* unit */ SCPI_UNIT_ELECTRONVOLT, /* mult */ 1e6},
+  89:libscpi/src/units.c ****     {/* name */ "GEV", /* unit */ SCPI_UNIT_ELECTRONVOLT, /* mult */ 1e9},
+  90:libscpi/src/units.c ****     {/* name */ "TEV", /* unit */ SCPI_UNIT_ELECTRONVOLT, /* mult */ 1e12},
+  91:libscpi/src/units.c **** 
+  92:libscpi/src/units.c ****     /* Mass */
+  93:libscpi/src/units.c ****     {/* name */ "U", /* unit */ SCPI_UNIT_ATOMIC_MASS, /* mult */ 1},
+  94:libscpi/src/units.c **** #endif /* USE_UNITS_PARTICLES */
+  95:libscpi/src/units.c **** 
+  96:libscpi/src/units.c **** #if USE_UNITS_ANGLE
+  97:libscpi/src/units.c ****     /* Angle */
+  98:libscpi/src/units.c ****     {/* name */ "DEG", /* unit */ SCPI_UNIT_DEGREE, /* mult */ 1},
+  99:libscpi/src/units.c ****     {/* name */ "GON", /* unit */ SCPI_UNIT_GRADE, /* mult */ 1},
+ 100:libscpi/src/units.c ****     {/* name */ "MNT", /* unit */ SCPI_UNIT_DEGREE, /* mult */ 1. / 60.},
+ 101:libscpi/src/units.c ****     {/* name */ "RAD", /* unit */ SCPI_UNIT_RADIAN, /* mult */ 1},
+ 102:libscpi/src/units.c ****     {/* name */ "SEC", /* unit */ SCPI_UNIT_DEGREE, /* mult */ 1. / 3600.},
+ 103:libscpi/src/units.c ****     {/* name */ "REV", /* unit */ SCPI_UNIT_REVOLUTION, /* mult */ 1},
+ 104:libscpi/src/units.c ****     {/* name */ "RS", /* unit */ SCPI_UNIT_STERADIAN, /* mult */ 1},
+ 105:libscpi/src/units.c **** #endif /* USE_UNITS_ANGLE */
+ 106:libscpi/src/units.c **** 
+ 107:libscpi/src/units.c **** #if USE_UNITS_ELECTRIC
+ 108:libscpi/src/units.c ****     /* Electric - capacitance */
+ 109:libscpi/src/units.c ****     {/* name */ "PF", /* unit */ SCPI_UNIT_FARAD, /* mult */ 1e-12},
+ 110:libscpi/src/units.c ****     {/* name */ "NF", /* unit */ SCPI_UNIT_FARAD, /* mult */ 1e-9},
+ 111:libscpi/src/units.c ****     {/* name */ "UF", /* unit */ SCPI_UNIT_FARAD, /* mult */ 1e-6},
+ 112:libscpi/src/units.c ****     {/* name */ "MF", /* unit */ SCPI_UNIT_FARAD, /* mult */ 1e-3},
+ 113:libscpi/src/units.c ****     {/* name */ "F", /* unit */ SCPI_UNIT_FARAD, /* mult */ 1},
+ 114:libscpi/src/units.c **** 
+ 115:libscpi/src/units.c ****     /* Electric - current */
+ 116:libscpi/src/units.c ****     {/* name */ "UA", /* unit */ SCPI_UNIT_AMPER, /* mult */ 1e-6},
+ 117:libscpi/src/units.c ****     {/* name */ "MA", /* unit */ SCPI_UNIT_AMPER, /* mult */ 1e-3},
+ 118:libscpi/src/units.c ****     {/* name */ "A", /* unit */ SCPI_UNIT_AMPER, /* mult */ 1},
+ 119:libscpi/src/units.c ****     {/* name */ "KA", /* unit */ SCPI_UNIT_AMPER, /* mult */ 1e3},
+ 120:libscpi/src/units.c **** 
+ 121:libscpi/src/units.c ****     /* Electric - potential */
+ 122:libscpi/src/units.c ****     {/* name */ "UV", /* unit */ SCPI_UNIT_VOLT, /* mult */ 1e-6},
+ 123:libscpi/src/units.c ****     {/* name */ "MV", /* unit */ SCPI_UNIT_VOLT, /* mult */ 1e-3},
+ 124:libscpi/src/units.c ****     {/* name */ "V", /* unit */ SCPI_UNIT_VOLT, /* mult */ 1},
+ 125:libscpi/src/units.c ****     {/* name */ "KV", /* unit */ SCPI_UNIT_VOLT, /* mult */ 1e3},
+ 126:libscpi/src/units.c **** 
+ 127:libscpi/src/units.c ****     /* Electric - resistance */
+ 128:libscpi/src/units.c ****     {/* name */ "OHM", /* unit */ SCPI_UNIT_OHM, /* mult */ 1},
+ 129:libscpi/src/units.c ****     {/* name */ "KOHM", /* unit */ SCPI_UNIT_OHM, /* mult */ 1e3},
+ 130:libscpi/src/units.c ****     {/* name */ "MOHM", /* unit */ SCPI_UNIT_OHM, /* mult */ 1e6},
+ 131:libscpi/src/units.c **** 
+ 132:libscpi/src/units.c ****     /* Inductance */
+ 133:libscpi/src/units.c ****     {/* name */ "UH", /* unit */ SCPI_UNIT_HENRY, /* mult */ 1e-6},
+ 134:libscpi/src/units.c ****     {/* name */ "MH", /* unit */ SCPI_UNIT_HENRY, /* mult */ 1e-3},
+ 135:libscpi/src/units.c ****     {/* name */ "H", /* unit */ SCPI_UNIT_HENRY, /* mult */ 1},
+ 136:libscpi/src/units.c **** #endif /* USE_UNITS_ELECTRIC */
+ 137:libscpi/src/units.c **** 
+ 138:libscpi/src/units.c **** #if USE_UNITS_ELECTRIC_CHARGE_CONDUCTANCE
+ 139:libscpi/src/units.c ****     /* Electric - charge */
+ 140:libscpi/src/units.c ****     {/* name */ "C", /* unit */ SCPI_UNIT_COULOMB, /* mult */ 1},
+ 141:libscpi/src/units.c **** 
+ 142:libscpi/src/units.c ****     /* Electric - conductance */
+ARM GAS  /tmp/cchzUUmK.s 			page 4
+
+
+ 143:libscpi/src/units.c ****     {/* name */ "USIE", /* unit */ SCPI_UNIT_SIEMENS, /* mult */ 1e-6},
+ 144:libscpi/src/units.c ****     {/* name */ "MSIE", /* unit */ SCPI_UNIT_SIEMENS, /* mult */ 1e-3},
+ 145:libscpi/src/units.c ****     {/* name */ "SIE", /* unit */ SCPI_UNIT_SIEMENS, /* mult */ 1},
+ 146:libscpi/src/units.c **** #endif /* USE_UNITS_ELECTRIC_CHARGE_CONDUCTANCE */
+ 147:libscpi/src/units.c **** 
+ 148:libscpi/src/units.c **** #if USE_UNITS_ENERGY_FORCE_MASS
+ 149:libscpi/src/units.c ****     /* Energy */
+ 150:libscpi/src/units.c ****     {/* name */ "J", /* unit */ SCPI_UNIT_JOULE, /* mult */ 1},
+ 151:libscpi/src/units.c ****     {/* name */ "KJ", /* unit */ SCPI_UNIT_JOULE, /* mult */ 1e3},
+ 152:libscpi/src/units.c ****     {/* name */ "MAJ", /* unit */ SCPI_UNIT_JOULE, /* mult */ 1e6},
+ 153:libscpi/src/units.c **** 
+ 154:libscpi/src/units.c ****     /* Force */
+ 155:libscpi/src/units.c ****     {/* name */ "N", /* unit */ SCPI_UNIT_NEWTON, /* mult */ 1},
+ 156:libscpi/src/units.c ****     {/* name */ "KN", /* unit */ SCPI_UNIT_NEWTON, /* mult */ 1e3},
+ 157:libscpi/src/units.c **** 
+ 158:libscpi/src/units.c ****     /* Pressure */
+ 159:libscpi/src/units.c ****     {/* name */ "ATM", /* unit */ SCPI_UNIT_ATMOSPHERE, /* mult */ 1},
+ 160:libscpi/src/units.c ****     {/* name */ "INHG", /* unit */ SCPI_UNIT_INCH_OF_MERCURY, /* mult */ 1},
+ 161:libscpi/src/units.c ****     {/* name */ "MMHG", /* unit */ SCPI_UNIT_MM_OF_MERCURY, /* mult */ 1},
+ 162:libscpi/src/units.c **** 
+ 163:libscpi/src/units.c ****     {/* name */ "TORR", /* unit */ SCPI_UNIT_TORT, /* mult */ 1},
+ 164:libscpi/src/units.c ****     {/* name */ "BAR", /* unit */ SCPI_UNIT_BAR, /* mult */ 1},
+ 165:libscpi/src/units.c **** 
+ 166:libscpi/src/units.c ****     {/* name */ "PAL", /* unit */ SCPI_UNIT_PASCAL, /* mult */ 1},
+ 167:libscpi/src/units.c ****     {/* name */ "KPAL", /* unit */ SCPI_UNIT_PASCAL, /* mult */ 1e3},
+ 168:libscpi/src/units.c ****     {/* name */ "MAPAL", /* unit */ SCPI_UNIT_PASCAL, /* mult */ 1e6},
+ 169:libscpi/src/units.c **** 
+ 170:libscpi/src/units.c ****     /* Viscosity kinematic */
+ 171:libscpi/src/units.c ****     {/* name */ "ST", /* unit */ SCPI_UNIT_STROKES, /* mult */ 1},
+ 172:libscpi/src/units.c **** 
+ 173:libscpi/src/units.c ****     /* Viscosity dynamic */
+ 174:libscpi/src/units.c ****     {/* name */ "P", /* unit */ SCPI_UNIT_POISE, /* mult */ 1},
+ 175:libscpi/src/units.c **** 
+ 176:libscpi/src/units.c ****     /* Viscosity dynamic */
+ 177:libscpi/src/units.c ****     {/* name */ "L", /* unit */ SCPI_UNIT_LITER, /* mult */ 1},
+ 178:libscpi/src/units.c **** 
+ 179:libscpi/src/units.c ****     /* Mass */
+ 180:libscpi/src/units.c ****     {/* name */ "MG", /* unit */ SCPI_UNIT_KILOGRAM, /* mult */ 1e-6},
+ 181:libscpi/src/units.c ****     {/* name */ "G", /* unit */ SCPI_UNIT_KILOGRAM, /* mult */ 1e-3},
+ 182:libscpi/src/units.c ****     {/* name */ "KG", /* unit */ SCPI_UNIT_KILOGRAM, /* mult */ 1},
+ 183:libscpi/src/units.c ****     {/* name */ "TNE", /* unit */ SCPI_UNIT_KILOGRAM, /* mult */ 1000},
+ 184:libscpi/src/units.c **** #endif /* USE_UNITS_ENERGY_FORCE_MASS */
+ 185:libscpi/src/units.c **** 
+ 186:libscpi/src/units.c **** #if USE_UNITS_FREQUENCY
+ 187:libscpi/src/units.c ****     /* Frequency */
+ 188:libscpi/src/units.c ****     {/* name */ "HZ", /* unit */ SCPI_UNIT_HERTZ, /* mult */ 1},
+ 189:libscpi/src/units.c ****     {/* name */ "KHZ", /* unit */ SCPI_UNIT_HERTZ, /* mult */ 1e3},
+ 190:libscpi/src/units.c ****     {/* name */ "MHZ", /* unit */ SCPI_UNIT_HERTZ, /* mult */ 1e6},
+ 191:libscpi/src/units.c ****     {/* name */ "GHZ", /* unit */ SCPI_UNIT_HERTZ, /* mult */ 1e9},
+ 192:libscpi/src/units.c **** #endif /* USE_UNITS_FREQUENCY */
+ 193:libscpi/src/units.c **** 
+ 194:libscpi/src/units.c **** #if USE_UNITS_DISTANCE
+ 195:libscpi/src/units.c ****     /* Length */
+ 196:libscpi/src/units.c ****     {/* name */ "ASU", /* unit */ SCPI_UNIT_ASTRONOMIC_UNIT, /* mult */ 1},
+ 197:libscpi/src/units.c ****     {/* name */ "PRS", /* unit */ SCPI_UNIT_PARSEC, /* mult */ 1},
+ 198:libscpi/src/units.c **** #if USE_UNITS_IMPERIAL
+ 199:libscpi/src/units.c ****     {/* name */ "IN", /* unit */ SCPI_UNIT_INCH, /* mult */ 1},
+ARM GAS  /tmp/cchzUUmK.s 			page 5
+
+
+ 200:libscpi/src/units.c ****     {/* name */ "FT", /* unit */ SCPI_UNIT_FOOT, /* mult */ 1},
+ 201:libscpi/src/units.c ****     {/* name */ "MI", /* unit */ SCPI_UNIT_MILE, /* mult */ 1},
+ 202:libscpi/src/units.c ****     {/* name */ "NAMI", /* unit */ SCPI_UNIT_NAUTICAL_MILE, /* mult */ 1},
+ 203:libscpi/src/units.c **** #endif /* USE_UNITS_IMPERIAL */
+ 204:libscpi/src/units.c **** 
+ 205:libscpi/src/units.c ****     {/* name */ "NM", /* unit */ SCPI_UNIT_METER, /* mult */ 1e-9},
+ 206:libscpi/src/units.c ****     {/* name */ "UM", /* unit */ SCPI_UNIT_METER, /* mult */ 1e-6},
+ 207:libscpi/src/units.c ****     {/* name */ "MM", /* unit */ SCPI_UNIT_METER, /* mult */ 1e-3},
+ 208:libscpi/src/units.c ****     {/* name */ "M", /* unit */ SCPI_UNIT_METER, /* mult */ 1},
+ 209:libscpi/src/units.c ****     {/* name */ "KM", /* unit */ SCPI_UNIT_METER, /* mult */ 1e3},
+ 210:libscpi/src/units.c **** #endif /* USE_UNITS_DISTANCE */
+ 211:libscpi/src/units.c **** 
+ 212:libscpi/src/units.c **** #if USE_UNITS_LIGHT
+ 213:libscpi/src/units.c ****     /* Illuminance */
+ 214:libscpi/src/units.c ****     {/* name */ "LX", /* unit */ SCPI_UNIT_LUX, /* mult */ 1},
+ 215:libscpi/src/units.c **** 
+ 216:libscpi/src/units.c ****     /* Luminous flux */
+ 217:libscpi/src/units.c ****     {/* name */ "LM", /* unit */ SCPI_UNIT_LUMEN, /* mult */ 1},
+ 218:libscpi/src/units.c **** 
+ 219:libscpi/src/units.c ****     /* Luminous intensity */
+ 220:libscpi/src/units.c ****     {/* name */ "CD", /* unit */ SCPI_UNIT_CANDELA, /* mult */ 1},
+ 221:libscpi/src/units.c **** #endif /* USE_UNITS_LIGHT */
+ 222:libscpi/src/units.c **** 
+ 223:libscpi/src/units.c **** #if USE_UNITS_MAGNETIC
+ 224:libscpi/src/units.c ****     /* Magnetic flux */
+ 225:libscpi/src/units.c ****     {/* name */ "WB", /* unit */ SCPI_UNIT_WEBER, /* mult */ 1},
+ 226:libscpi/src/units.c **** 
+ 227:libscpi/src/units.c ****     /* Magnetic induction */
+ 228:libscpi/src/units.c ****     {/* name */ "NT", /* unit */ SCPI_UNIT_TESLA, /* mult */ 1e-9},
+ 229:libscpi/src/units.c ****     {/* name */ "UT", /* unit */ SCPI_UNIT_TESLA, /* mult */ 1e-6},
+ 230:libscpi/src/units.c ****     {/* name */ "MT", /* unit */ SCPI_UNIT_TESLA, /* mult */ 1e-3},
+ 231:libscpi/src/units.c ****     {/* name */ "T", /* unit */ SCPI_UNIT_TESLA, /* mult */ 1},
+ 232:libscpi/src/units.c **** #endif /* USE_UNITS_MAGNETIC */
+ 233:libscpi/src/units.c **** 
+ 234:libscpi/src/units.c **** #if USE_UNITS_POWER
+ 235:libscpi/src/units.c ****     /* Power */
+ 236:libscpi/src/units.c ****     {/* name */ "W", /* unit */ SCPI_UNIT_WATT, /* mult */ 1},
+ 237:libscpi/src/units.c ****     {/* name */ "DBM", /* unit */ SCPI_UNIT_DBM, /* mult */ 1},
+ 238:libscpi/src/units.c ****     {/* name */ "DBMW", /* unit */ SCPI_UNIT_DBM, /* mult */ 1},
+ 239:libscpi/src/units.c **** #endif /* USE_UNITS_POWER  */
+ 240:libscpi/src/units.c **** 
+ 241:libscpi/src/units.c **** #if USE_UNITS_RATIO
+ 242:libscpi/src/units.c ****     /* Ratio */
+ 243:libscpi/src/units.c ****     {/* name */ "DB", /* unit */ SCPI_UNIT_DECIBEL, /* mult */ 1},
+ 244:libscpi/src/units.c ****     {/* name */ "PCT", /* unit */ SCPI_UNIT_UNITLESS, /* mult */ 1e-2},
+ 245:libscpi/src/units.c ****     {/* name */ "PPM", /* unit */ SCPI_UNIT_UNITLESS, /* mult */ 1e-6},
+ 246:libscpi/src/units.c **** #endif /* USE_UNITS_RATIO */
+ 247:libscpi/src/units.c **** 
+ 248:libscpi/src/units.c **** #if USE_UNITS_TEMPERATURE
+ 249:libscpi/src/units.c ****     /* Temperature */
+ 250:libscpi/src/units.c ****     {/* name */ "CEL", /* unit */ SCPI_UNIT_CELSIUS, /* mult */ 1},
+ 251:libscpi/src/units.c **** #if USE_UNITS_IMPERIAL
+ 252:libscpi/src/units.c ****     {/* name */ "FAR", /* unit */ SCPI_UNIT_FAHRENHEIT, /* mult */ 1},
+ 253:libscpi/src/units.c **** #endif /* USE_UNITS_IMPERIAL */
+ 254:libscpi/src/units.c ****     {/* name */ "K", /* unit */ SCPI_UNIT_KELVIN, /* mult */ 1},
+ 255:libscpi/src/units.c **** #endif /* USE_UNITS_TEMPERATURE */
+ 256:libscpi/src/units.c **** 
+ARM GAS  /tmp/cchzUUmK.s 			page 6
+
+
+ 257:libscpi/src/units.c **** #if USE_UNITS_TIME
+ 258:libscpi/src/units.c ****     /* Time */
+ 259:libscpi/src/units.c ****     {/* name */ "PS", /* unit */ SCPI_UNIT_SECOND, /* mult */ 1e-12},
+ 260:libscpi/src/units.c ****     {/* name */ "NS", /* unit */ SCPI_UNIT_SECOND, /* mult */ 1e-9},
+ 261:libscpi/src/units.c ****     {/* name */ "US", /* unit */ SCPI_UNIT_SECOND, /* mult */ 1e-6},
+ 262:libscpi/src/units.c ****     {/* name */ "MS", /* unit */ SCPI_UNIT_SECOND, /* mult */ 1e-3},
+ 263:libscpi/src/units.c ****     {/* name */ "S", /* unit */ SCPI_UNIT_SECOND, /* mult */ 1},
+ 264:libscpi/src/units.c ****     {/* name */ "MIN", /* unit */ SCPI_UNIT_SECOND, /* mult */ 60},
+ 265:libscpi/src/units.c ****     {/* name */ "HR", /* unit */ SCPI_UNIT_SECOND, /* mult */ 3600},
+ 266:libscpi/src/units.c ****     {/* name */ "D", /* unit */ SCPI_UNIT_DAY, /* mult */ 1},
+ 267:libscpi/src/units.c ****     {/* name */ "ANN", /* unit */ SCPI_UNIT_YEAR, /* mult */ 1},
+ 268:libscpi/src/units.c **** #endif /* USE_UNITS_TIME */
+ 269:libscpi/src/units.c **** 
+ 270:libscpi/src/units.c ****     SCPI_UNITS_LIST_END,
+ 271:libscpi/src/units.c **** };
+ 272:libscpi/src/units.c **** 
+ 273:libscpi/src/units.c **** /*
+ 274:libscpi/src/units.c ****  * Special number values definition
+ 275:libscpi/src/units.c ****  */
+ 276:libscpi/src/units.c **** const scpi_choice_def_t scpi_special_numbers_def[] = {
+ 277:libscpi/src/units.c ****     {/* name */ "MINimum", /* type */ SCPI_NUM_MIN},
+ 278:libscpi/src/units.c ****     {/* name */ "MAXimum", /* type */ SCPI_NUM_MAX},
+ 279:libscpi/src/units.c ****     {/* name */ "DEFault", /* type */ SCPI_NUM_DEF},
+ 280:libscpi/src/units.c ****     {/* name */ "UP", /* type */ SCPI_NUM_UP},
+ 281:libscpi/src/units.c ****     {/* name */ "DOWN", /* type */ SCPI_NUM_DOWN},
+ 282:libscpi/src/units.c ****     {/* name */ "NAN", /* type */ SCPI_NUM_NAN},
+ 283:libscpi/src/units.c ****     {/* name */ "INFinity", /* type */ SCPI_NUM_INF},
+ 284:libscpi/src/units.c ****     {/* name */ "NINF", /* type */ SCPI_NUM_NINF},
+ 285:libscpi/src/units.c ****     {/* name */ "AUTO", /* type */ SCPI_NUM_AUTO},
+ 286:libscpi/src/units.c ****     SCPI_CHOICE_LIST_END,
+ 287:libscpi/src/units.c **** };
+ 288:libscpi/src/units.c **** 
+ 289:libscpi/src/units.c **** /**
+ 290:libscpi/src/units.c ****  * Convert string describing unit to its representation
+ 291:libscpi/src/units.c ****  * @param units units patterns
+ 292:libscpi/src/units.c ****  * @param unit text representation of unknown unit
+ 293:libscpi/src/units.c ****  * @param len length of text representation
+ 294:libscpi/src/units.c ****  * @return pointer of related unit definition or NULL
+ 295:libscpi/src/units.c ****  */
+ 296:libscpi/src/units.c **** static const scpi_unit_def_t * translateUnit(const scpi_unit_def_t * units, const char * unit, size
+ 297:libscpi/src/units.c ****     int i;
+ 298:libscpi/src/units.c **** 
+ 299:libscpi/src/units.c ****     if (units == NULL) {
+ 300:libscpi/src/units.c ****         return NULL;
+ 301:libscpi/src/units.c ****     }
+ 302:libscpi/src/units.c **** 
+ 303:libscpi/src/units.c ****     for (i = 0; units[i].name != NULL; i++) {
+ 304:libscpi/src/units.c ****         if (compareStr(unit, len, units[i].name, strlen(units[i].name))) {
+ 305:libscpi/src/units.c ****             return &units[i];
+ 306:libscpi/src/units.c ****         }
+ 307:libscpi/src/units.c ****     }
+ 308:libscpi/src/units.c **** 
+ 309:libscpi/src/units.c ****     return NULL;
+ 310:libscpi/src/units.c **** }
+ 311:libscpi/src/units.c **** 
+ 312:libscpi/src/units.c **** /**
+ 313:libscpi/src/units.c ****  * Convert unit definition to string
+ARM GAS  /tmp/cchzUUmK.s 			page 7
+
+
+ 314:libscpi/src/units.c ****  * @param units units definitions (patterns)
+ 315:libscpi/src/units.c ****  * @param unit type of unit
+ 316:libscpi/src/units.c ****  * @return string representation of unit
+ 317:libscpi/src/units.c ****  */
+ 318:libscpi/src/units.c **** static const char * translateUnitInverse(const scpi_unit_def_t * units, const scpi_unit_t unit) {
+ 319:libscpi/src/units.c ****     int i;
+ 320:libscpi/src/units.c **** 
+ 321:libscpi/src/units.c ****     if (units == NULL) {
+ 322:libscpi/src/units.c ****         return NULL;
+ 323:libscpi/src/units.c ****     }
+ 324:libscpi/src/units.c **** 
+ 325:libscpi/src/units.c ****     for (i = 0; units[i].name != NULL; i++) {
+ 326:libscpi/src/units.c ****         if ((units[i].unit == unit) && (units[i].mult == 1)) {
+ 327:libscpi/src/units.c ****             return units[i].name;
+ 328:libscpi/src/units.c ****         }
+ 329:libscpi/src/units.c ****     }
+ 330:libscpi/src/units.c **** 
+ 331:libscpi/src/units.c ****     return NULL;
+ 332:libscpi/src/units.c **** }
+ 333:libscpi/src/units.c **** 
+ 334:libscpi/src/units.c **** /**
+ 335:libscpi/src/units.c ****  * Transform number to base units
+ 336:libscpi/src/units.c ****  * @param context
+ 337:libscpi/src/units.c ****  * @param unit text representation of unit
+ 338:libscpi/src/units.c ****  * @param len length of text representation
+ 339:libscpi/src/units.c ****  * @param value preparsed numeric value
+ 340:libscpi/src/units.c ****  * @return TRUE if value parameter was converted to base units
+ 341:libscpi/src/units.c ****  */
+ 342:libscpi/src/units.c **** static scpi_bool_t transformNumber(scpi_t * context, const char * unit, size_t len, scpi_number_t *
+ 343:libscpi/src/units.c ****     size_t s;
+ 344:libscpi/src/units.c ****     const scpi_unit_def_t * unitDef;
+ 345:libscpi/src/units.c ****     s = skipWhitespace(unit, len);
+ 346:libscpi/src/units.c **** 
+ 347:libscpi/src/units.c ****     if (s == len) {
+ 348:libscpi/src/units.c ****         value->unit = SCPI_UNIT_NONE;
+ 349:libscpi/src/units.c ****         return TRUE;
+ 350:libscpi/src/units.c ****     }
+ 351:libscpi/src/units.c **** 
+ 352:libscpi/src/units.c ****     unitDef = translateUnit(context->units, unit + s, len - s);
+ 353:libscpi/src/units.c **** 
+ 354:libscpi/src/units.c ****     if (unitDef == NULL) {
+ 355:libscpi/src/units.c ****         SCPI_ErrorPush(context, SCPI_ERROR_INVALID_SUFFIX);
+ 356:libscpi/src/units.c ****         return FALSE;
+ 357:libscpi/src/units.c ****     }
+ 358:libscpi/src/units.c **** 
+ 359:libscpi/src/units.c ****     value->content.value *= unitDef->mult;
+ 360:libscpi/src/units.c ****     value->unit = unitDef->unit;
+ 361:libscpi/src/units.c **** 
+ 362:libscpi/src/units.c ****     return TRUE;
+ 363:libscpi/src/units.c **** }
+ 364:libscpi/src/units.c **** 
+ 365:libscpi/src/units.c **** /**
+ 366:libscpi/src/units.c ****  * Parse parameter as number, number with unit or special value (min, max, default, ...)
+ 367:libscpi/src/units.c ****  * @param context
+ 368:libscpi/src/units.c ****  * @param value return value
+ 369:libscpi/src/units.c ****  * @param mandatory if the parameter is mandatory
+ 370:libscpi/src/units.c ****  * @return
+ARM GAS  /tmp/cchzUUmK.s 			page 8
+
+
+ 371:libscpi/src/units.c ****  */
+ 372:libscpi/src/units.c **** scpi_bool_t SCPI_ParamNumber(scpi_t * context, const scpi_choice_def_t * special, scpi_number_t * v
+  31              		.loc 1 372 129 view -0
+  32              		.cfi_startproc
+  33              		@ args = 0, pretend = 0, frame = 48
+  34              		@ frame_needed = 0, uses_anonymous_args = 0
+ 373:libscpi/src/units.c ****     scpi_token_t token;
+  35              		.loc 1 373 5 view .LVU1
+ 374:libscpi/src/units.c ****     lex_state_t state;
+  36              		.loc 1 374 5 view .LVU2
+ 375:libscpi/src/units.c ****     scpi_parameter_t param;
+  37              		.loc 1 375 5 view .LVU3
+ 376:libscpi/src/units.c ****     scpi_bool_t result;
+  38              		.loc 1 376 5 view .LVU4
+ 377:libscpi/src/units.c ****     int32_t tag;
+  39              		.loc 1 377 5 view .LVU5
+ 378:libscpi/src/units.c **** 
+ 379:libscpi/src/units.c ****     if (!value) {
+  40              		.loc 1 379 5 view .LVU6
+ 372:libscpi/src/units.c ****     scpi_token_t token;
+  41              		.loc 1 372 129 is_stmt 0 view .LVU7
+  42 0000 2DE9F047 		push	{r4, r5, r6, r7, r8, r9, r10, lr}
+  43              	.LCFI0:
+  44              		.cfi_def_cfa_offset 32
+  45              		.cfi_offset 4, -32
+  46              		.cfi_offset 5, -28
+  47              		.cfi_offset 6, -24
+  48              		.cfi_offset 7, -20
+  49              		.cfi_offset 8, -16
+  50              		.cfi_offset 9, -12
+  51              		.cfi_offset 10, -8
+  52              		.cfi_offset 14, -4
+  53 0004 0646     		mov	r6, r0
+  54 0006 8CB0     		sub	sp, sp, #48
+  55              	.LCFI1:
+  56              		.cfi_def_cfa_offset 80
+ 372:libscpi/src/units.c ****     scpi_token_t token;
+  57              		.loc 1 372 129 view .LVU8
+  58 0008 0F46     		mov	r7, r1
+  59              		.loc 1 379 8 view .LVU9
+  60 000a 1446     		mov	r4, r2
+  61 000c 22B9     		cbnz	r2, .L2
+ 380:libscpi/src/units.c ****         SCPI_ErrorPush(context, SCPI_ERROR_SYSTEM_ERROR);
+  62              		.loc 1 380 9 is_stmt 1 view .LVU10
+  63 000e 4749     		ldr	r1, .L31
+  64              	.LVL1:
+  65              	.L28:
+  66              	.LBB6:
+  67              	.LBB7:
+ 355:libscpi/src/units.c ****         return FALSE;
+  68              		.loc 1 355 9 is_stmt 0 view .LVU11
+  69 0010 FFF7FEFF 		bl	SCPI_ErrorPush
+  70              	.LVL2:
+  71              	.L29:
+ 356:libscpi/src/units.c ****     }
+  72              		.loc 1 356 9 is_stmt 1 view .LVU12
+ 356:libscpi/src/units.c ****     }
+ARM GAS  /tmp/cchzUUmK.s 			page 9
+
+
+  73              		.loc 1 356 16 is_stmt 0 view .LVU13
+  74 0014 0025     		movs	r5, #0
+  75 0016 29E0     		b	.L20
+  76              	.LVL3:
+  77              	.L2:
+ 356:libscpi/src/units.c ****     }
+  78              		.loc 1 356 16 view .LVU14
+  79              	.LBE7:
+  80              	.LBE6:
+ 381:libscpi/src/units.c ****         return FALSE;
+ 382:libscpi/src/units.c ****     }
+ 383:libscpi/src/units.c **** 
+ 384:libscpi/src/units.c ****     result = SCPI_Parameter(context, &param, mandatory);
+  81              		.loc 1 384 5 is_stmt 1 view .LVU15
+  82              		.loc 1 384 14 is_stmt 0 view .LVU16
+  83 0018 1A46     		mov	r2, r3
+  84              	.LVL4:
+  85              		.loc 1 384 14 view .LVU17
+  86 001a 09A9     		add	r1, sp, #36
+  87              	.LVL5:
+  88              		.loc 1 384 14 view .LVU18
+  89 001c FFF7FEFF 		bl	SCPI_Parameter
+  90              	.LVL6:
+ 385:libscpi/src/units.c **** 
+ 386:libscpi/src/units.c ****     if (!result) {
+  91              		.loc 1 386 5 is_stmt 1 view .LVU19
+  92              		.loc 1 386 8 is_stmt 0 view .LVU20
+  93 0020 0546     		mov	r5, r0
+  94 0022 18B3     		cbz	r0, .L20
+ 387:libscpi/src/units.c ****         return result;
+ 388:libscpi/src/units.c ****     }
+ 389:libscpi/src/units.c **** 
+ 390:libscpi/src/units.c ****     state.buffer = param.ptr;
+  95              		.loc 1 390 5 is_stmt 1 view .LVU21
+  96              		.loc 1 390 25 is_stmt 0 view .LVU22
+  97 0024 0A9B     		ldr	r3, [sp, #40]
+ 391:libscpi/src/units.c ****     state.pos = state.buffer;
+  98              		.loc 1 391 15 view .LVU23
+  99 0026 CDE90633 		strd	r3, r3, [sp, #24]
+ 392:libscpi/src/units.c ****     state.len = param.len;
+ 100              		.loc 1 392 5 is_stmt 1 view .LVU24
+ 101              		.loc 1 392 15 is_stmt 0 view .LVU25
+ 102 002a 0B9B     		ldr	r3, [sp, #44]
+ 103 002c 0893     		str	r3, [sp, #32]
+ 393:libscpi/src/units.c **** 
+ 394:libscpi/src/units.c ****     switch (param.type) {
+ 104              		.loc 1 394 5 is_stmt 1 view .LVU26
+ 105              		.loc 1 394 18 is_stmt 0 view .LVU27
+ 106 002e 9DF82430 		ldrb	r3, [sp, #36]	@ zero_extendqisi2
+ 107              		.loc 1 394 5 view .LVU28
+ 108 0032 9A1F     		subs	r2, r3, #6
+ 109 0034 052A     		cmp	r2, #5
+ 395:libscpi/src/units.c ****         case SCPI_TOKEN_DECIMAL_NUMERIC_PROGRAM_DATA:
+ 396:libscpi/src/units.c ****         case SCPI_TOKEN_HEXNUM:
+ 397:libscpi/src/units.c ****         case SCPI_TOKEN_OCTNUM:
+ 398:libscpi/src/units.c ****         case SCPI_TOKEN_BINNUM:
+ 399:libscpi/src/units.c ****         case SCPI_TOKEN_DECIMAL_NUMERIC_PROGRAM_DATA_WITH_SUFFIX:
+ARM GAS  /tmp/cchzUUmK.s 			page 10
+
+
+ 400:libscpi/src/units.c ****         case SCPI_TOKEN_PROGRAM_MNEMONIC:
+ 401:libscpi/src/units.c ****             value->unit = SCPI_UNIT_NONE;
+ 110              		.loc 1 401 13 is_stmt 1 view .LVU29
+ 111              		.loc 1 401 25 is_stmt 0 view .LVU30
+ 112 0036 9EBF     		ittt	ls
+ 113 0038 0021     		movls	r1, #0
+ 114 003a 2174     		strbls	r1, [r4, #16]
+ 402:libscpi/src/units.c ****             value->special = FALSE;
+ 115              		.loc 1 402 13 is_stmt 1 view .LVU31
+ 116              		.loc 1 402 28 is_stmt 0 view .LVU32
+ 117 003c 2170     		strbls	r1, [r4]
+ 403:libscpi/src/units.c ****             result = TRUE;
+ 118              		.loc 1 403 13 is_stmt 1 view .LVU33
+ 119              	.LVL7:
+ 404:libscpi/src/units.c ****             break;
+ 120              		.loc 1 404 13 view .LVU34
+ 405:libscpi/src/units.c ****         default:
+ 406:libscpi/src/units.c ****             break;
+ 407:libscpi/src/units.c ****     }
+ 408:libscpi/src/units.c **** 
+ 409:libscpi/src/units.c ****     switch (param.type) {
+ 121              		.loc 1 409 5 view .LVU35
+ 122 003e 052A     		cmp	r2, #5
+ 123 0040 E8D8     		bhi	.L29
+ 124 0042 DFE802F0 		tbb	[pc, r2]
+ 125              	.L6:
+ 126 0046 17       		.byte	(.L9-.L6)/2
+ 127 0047 19       		.byte	(.L8-.L6)/2
+ 128 0048 0B       		.byte	(.L7-.L6)/2
+ 129 0049 03       		.byte	(.L5-.L6)/2
+ 130 004a 03       		.byte	(.L5-.L6)/2
+ 131 004b 03       		.byte	(.L5-.L6)/2
+ 132              		.p2align 1
+ 133              	.L5:
+ 410:libscpi/src/units.c ****         case SCPI_TOKEN_DECIMAL_NUMERIC_PROGRAM_DATA:
+ 411:libscpi/src/units.c ****         case SCPI_TOKEN_DECIMAL_NUMERIC_PROGRAM_DATA_WITH_SUFFIX:
+ 412:libscpi/src/units.c ****         case SCPI_TOKEN_PROGRAM_MNEMONIC:
+ 413:libscpi/src/units.c ****             value->base = 10;
+ 134              		.loc 1 413 13 view .LVU36
+ 135              		.loc 1 413 25 is_stmt 0 view .LVU37
+ 136 004c 0A22     		movs	r2, #10
+ 137 004e 0A3B     		subs	r3, r3, #10
+ 138 0050 6274     		strb	r2, [r4, #17]
+ 414:libscpi/src/units.c ****             break;
+ 139              		.loc 1 414 13 is_stmt 1 view .LVU38
+ 415:libscpi/src/units.c ****         case SCPI_TOKEN_BINNUM:
+ 416:libscpi/src/units.c ****             value->base = 2;
+ 417:libscpi/src/units.c ****             break;
+ 418:libscpi/src/units.c ****         case SCPI_TOKEN_HEXNUM:
+ 419:libscpi/src/units.c ****             value->base = 16;
+ 420:libscpi/src/units.c ****             break;
+ 421:libscpi/src/units.c ****         case SCPI_TOKEN_OCTNUM:
+ 422:libscpi/src/units.c ****             value->base = 8;
+ 423:libscpi/src/units.c ****             break;
+ 424:libscpi/src/units.c ****         default:
+ 425:libscpi/src/units.c ****             break;
+ 426:libscpi/src/units.c ****     }
+ARM GAS  /tmp/cchzUUmK.s 			page 11
+
+
+ 427:libscpi/src/units.c **** 
+ 428:libscpi/src/units.c ****     switch (param.type) {
+ 140              		.loc 1 428 5 view .LVU39
+ 141 0052 012B     		cmp	r3, #1
+ 142 0054 55D8     		bhi	.L10
+ 143 0056 DFE803F0 		tbb	[pc, r3]
+ 144              	.L12:
+ 145 005a 03       		.byte	(.L13-.L12)/2
+ 146 005b 11       		.byte	(.L11-.L12)/2
+ 147              		.p2align 1
+ 148              	.L7:
+ 416:libscpi/src/units.c ****             break;
+ 149              		.loc 1 416 13 view .LVU40
+ 416:libscpi/src/units.c ****             break;
+ 150              		.loc 1 416 25 is_stmt 0 view .LVU41
+ 151 005c 0223     		movs	r3, #2
+ 152              	.L27:
+ 422:libscpi/src/units.c ****             break;
+ 153              		.loc 1 422 25 view .LVU42
+ 154 005e 6374     		strb	r3, [r4, #17]
+ 423:libscpi/src/units.c ****         default:
+ 155              		.loc 1 423 13 is_stmt 1 view .LVU43
+ 156              		.loc 1 428 5 view .LVU44
+ 157              	.L13:
+ 429:libscpi/src/units.c ****         case SCPI_TOKEN_DECIMAL_NUMERIC_PROGRAM_DATA:
+ 430:libscpi/src/units.c ****             SCPI_ParamToDouble(context, &param, &(value->content.value));
+ 158              		.loc 1 430 13 view .LVU45
+ 159 0060 04F10802 		add	r2, r4, #8
+ 160 0064 09A9     		add	r1, sp, #36
+ 161 0066 3046     		mov	r0, r6
+ 162 0068 FFF7FEFF 		bl	SCPI_ParamToDouble
+ 163              	.LVL8:
+ 431:libscpi/src/units.c ****             break;
+ 164              		.loc 1 431 13 view .LVU46
+ 165              	.L20:
+ 432:libscpi/src/units.c ****         case SCPI_TOKEN_HEXNUM:
+ 433:libscpi/src/units.c ****             SCPI_ParamToDouble(context, &param, &(value->content.value));
+ 434:libscpi/src/units.c ****             break;
+ 435:libscpi/src/units.c ****         case SCPI_TOKEN_OCTNUM:
+ 436:libscpi/src/units.c ****             SCPI_ParamToDouble(context, &param, &(value->content.value));
+ 437:libscpi/src/units.c ****             break;
+ 438:libscpi/src/units.c ****         case SCPI_TOKEN_BINNUM:
+ 439:libscpi/src/units.c ****             SCPI_ParamToDouble(context, &param, &(value->content.value));
+ 440:libscpi/src/units.c ****             break;
+ 441:libscpi/src/units.c ****         case SCPI_TOKEN_DECIMAL_NUMERIC_PROGRAM_DATA_WITH_SUFFIX:
+ 442:libscpi/src/units.c ****             scpiLex_DecimalNumericProgramData(&state, &token);
+ 443:libscpi/src/units.c ****             scpiLex_WhiteSpace(&state, &token);
+ 444:libscpi/src/units.c ****             scpiLex_SuffixProgramData(&state, &token);
+ 445:libscpi/src/units.c **** 
+ 446:libscpi/src/units.c ****             SCPI_ParamToDouble(context, &param, &(value->content.value));
+ 447:libscpi/src/units.c **** 
+ 448:libscpi/src/units.c ****             result = transformNumber(context, token.ptr, token.len, value);
+ 449:libscpi/src/units.c ****             break;
+ 450:libscpi/src/units.c ****         case SCPI_TOKEN_PROGRAM_MNEMONIC:
+ 451:libscpi/src/units.c ****             scpiLex_WhiteSpace(&state, &token);
+ 452:libscpi/src/units.c ****             scpiLex_CharacterProgramData(&state, &token);
+ 453:libscpi/src/units.c **** 
+ARM GAS  /tmp/cchzUUmK.s 			page 12
+
+
+ 454:libscpi/src/units.c ****             /* convert string to special number type */
+ 455:libscpi/src/units.c ****             result = SCPI_ParamToChoice(context, &token, special, &tag);
+ 456:libscpi/src/units.c **** 
+ 457:libscpi/src/units.c ****             value->special = TRUE;
+ 458:libscpi/src/units.c ****             value->content.tag = tag;
+ 459:libscpi/src/units.c **** 
+ 460:libscpi/src/units.c ****             break;
+ 461:libscpi/src/units.c ****         default:
+ 462:libscpi/src/units.c ****             result = FALSE;
+ 463:libscpi/src/units.c ****     }
+ 464:libscpi/src/units.c **** 
+ 465:libscpi/src/units.c ****     return result;
+ 466:libscpi/src/units.c **** }
+ 166              		.loc 1 466 1 is_stmt 0 view .LVU47
+ 167 006c 2846     		mov	r0, r5
+ 168 006e 0CB0     		add	sp, sp, #48
+ 169              	.LCFI2:
+ 170              		.cfi_remember_state
+ 171              		.cfi_def_cfa_offset 32
+ 172              		@ sp needed
+ 173 0070 BDE8F087 		pop	{r4, r5, r6, r7, r8, r9, r10, pc}
+ 174              	.LVL9:
+ 175              	.L9:
+ 176              	.LCFI3:
+ 177              		.cfi_restore_state
+ 419:libscpi/src/units.c ****             break;
+ 178              		.loc 1 419 13 is_stmt 1 view .LVU48
+ 419:libscpi/src/units.c ****             break;
+ 179              		.loc 1 419 25 is_stmt 0 view .LVU49
+ 180 0074 1023     		movs	r3, #16
+ 181 0076 F2E7     		b	.L27
+ 182              	.L8:
+ 422:libscpi/src/units.c ****             break;
+ 183              		.loc 1 422 13 is_stmt 1 view .LVU50
+ 422:libscpi/src/units.c ****             break;
+ 184              		.loc 1 422 25 is_stmt 0 view .LVU51
+ 185 0078 0823     		movs	r3, #8
+ 186 007a F0E7     		b	.L27
+ 187              	.L11:
+ 442:libscpi/src/units.c ****             scpiLex_WhiteSpace(&state, &token);
+ 188              		.loc 1 442 13 is_stmt 1 view .LVU52
+ 189 007c 03A9     		add	r1, sp, #12
+ 190 007e 06A8     		add	r0, sp, #24
+ 191 0080 FFF7FEFF 		bl	scpiLex_DecimalNumericProgramData
+ 192              	.LVL10:
+ 443:libscpi/src/units.c ****             scpiLex_SuffixProgramData(&state, &token);
+ 193              		.loc 1 443 13 view .LVU53
+ 194 0084 03A9     		add	r1, sp, #12
+ 195 0086 06A8     		add	r0, sp, #24
+ 196 0088 FFF7FEFF 		bl	scpiLex_WhiteSpace
+ 197              	.LVL11:
+ 444:libscpi/src/units.c **** 
+ 198              		.loc 1 444 13 view .LVU54
+ 199 008c 03A9     		add	r1, sp, #12
+ 200 008e 06A8     		add	r0, sp, #24
+ 201 0090 FFF7FEFF 		bl	scpiLex_SuffixProgramData
+ 202              	.LVL12:
+ARM GAS  /tmp/cchzUUmK.s 			page 13
+
+
+ 446:libscpi/src/units.c **** 
+ 203              		.loc 1 446 13 view .LVU55
+ 204 0094 04F10802 		add	r2, r4, #8
+ 205 0098 09A9     		add	r1, sp, #36
+ 206 009a 3046     		mov	r0, r6
+ 207 009c FFF7FEFF 		bl	SCPI_ParamToDouble
+ 208              	.LVL13:
+ 448:libscpi/src/units.c ****             break;
+ 209              		.loc 1 448 13 view .LVU56
+ 448:libscpi/src/units.c ****             break;
+ 210              		.loc 1 448 22 is_stmt 0 view .LVU57
+ 211 00a0 DDE90487 		ldrd	r8, r7, [sp, #16]
+ 212              	.LVL14:
+ 213              	.LBB13:
+ 214              	.LBI6:
+ 342:libscpi/src/units.c ****     size_t s;
+ 215              		.loc 1 342 20 is_stmt 1 view .LVU58
+ 216              	.LBB12:
+ 343:libscpi/src/units.c ****     const scpi_unit_def_t * unitDef;
+ 217              		.loc 1 343 5 view .LVU59
+ 344:libscpi/src/units.c ****     s = skipWhitespace(unit, len);
+ 218              		.loc 1 344 5 view .LVU60
+ 345:libscpi/src/units.c **** 
+ 219              		.loc 1 345 5 view .LVU61
+ 345:libscpi/src/units.c **** 
+ 220              		.loc 1 345 9 is_stmt 0 view .LVU62
+ 221 00a4 3946     		mov	r1, r7
+ 222 00a6 4046     		mov	r0, r8
+ 223 00a8 FFF7FEFF 		bl	skipWhitespace
+ 224              	.LVL15:
+ 347:libscpi/src/units.c ****         value->unit = SCPI_UNIT_NONE;
+ 225              		.loc 1 347 5 is_stmt 1 view .LVU63
+ 347:libscpi/src/units.c ****         value->unit = SCPI_UNIT_NONE;
+ 226              		.loc 1 347 8 is_stmt 0 view .LVU64
+ 227 00ac 8742     		cmp	r7, r0
+ 228 00ae 02D1     		bne	.L14
+ 348:libscpi/src/units.c ****         return TRUE;
+ 229              		.loc 1 348 9 is_stmt 1 view .LVU65
+ 348:libscpi/src/units.c ****         return TRUE;
+ 230              		.loc 1 348 21 is_stmt 0 view .LVU66
+ 231 00b0 0023     		movs	r3, #0
+ 232              	.LVL16:
+ 233              	.L30:
+ 360:libscpi/src/units.c **** 
+ 234              		.loc 1 360 17 view .LVU67
+ 235 00b2 2374     		strb	r3, [r4, #16]
+ 362:libscpi/src/units.c **** }
+ 236              		.loc 1 362 5 is_stmt 1 view .LVU68
+ 237              	.LVL17:
+ 362:libscpi/src/units.c **** }
+ 238              		.loc 1 362 12 is_stmt 0 view .LVU69
+ 239 00b4 DAE7     		b	.L20
+ 240              	.LVL18:
+ 241              	.L14:
+ 352:libscpi/src/units.c **** 
+ 242              		.loc 1 352 5 is_stmt 1 view .LVU70
+ 352:libscpi/src/units.c **** 
+ARM GAS  /tmp/cchzUUmK.s 			page 14
+
+
+ 243              		.loc 1 352 15 is_stmt 0 view .LVU71
+ 244 00b6 F36D     		ldr	r3, [r6, #92]
+ 245 00b8 8044     		add	r8, r8, r0
+ 246              	.LVL19:
+ 352:libscpi/src/units.c **** 
+ 247              		.loc 1 352 15 view .LVU72
+ 248 00ba A7EB0009 		sub	r9, r7, r0
+ 249              	.LVL20:
+ 250              	.LBB8:
+ 251              	.LBI8:
+ 296:libscpi/src/units.c ****     int i;
+ 252              		.loc 1 296 32 is_stmt 1 view .LVU73
+ 253              	.LBB9:
+ 297:libscpi/src/units.c **** 
+ 254              		.loc 1 297 5 view .LVU74
+ 299:libscpi/src/units.c ****         return NULL;
+ 255              		.loc 1 299 5 view .LVU75
+ 299:libscpi/src/units.c ****         return NULL;
+ 256              		.loc 1 299 8 is_stmt 0 view .LVU76
+ 257 00be 1BB1     		cbz	r3, .L15
+ 258 00c0 1F46     		mov	r7, r3
+ 259              	.LVL21:
+ 260              	.L16:
+ 303:libscpi/src/units.c ****         if (compareStr(unit, len, units[i].name, strlen(units[i].name))) {
+ 261              		.loc 1 303 17 is_stmt 1 view .LVU77
+ 303:libscpi/src/units.c ****         if (compareStr(unit, len, units[i].name, strlen(units[i].name))) {
+ 262              		.loc 1 303 25 is_stmt 0 view .LVU78
+ 263 00c2 3A68     		ldr	r2, [r7]
+ 303:libscpi/src/units.c ****         if (compareStr(unit, len, units[i].name, strlen(units[i].name))) {
+ 264              		.loc 1 303 22 view .LVU79
+ 265 00c4 BA46     		mov	r10, r7
+ 303:libscpi/src/units.c ****         if (compareStr(unit, len, units[i].name, strlen(units[i].name))) {
+ 266              		.loc 1 303 5 view .LVU80
+ 267 00c6 1AB9     		cbnz	r2, .L18
+ 268              	.L15:
+ 269              	.LVL22:
+ 303:libscpi/src/units.c ****         if (compareStr(unit, len, units[i].name, strlen(units[i].name))) {
+ 270              		.loc 1 303 5 view .LVU81
+ 271              	.LBE9:
+ 272              	.LBE8:
+ 355:libscpi/src/units.c ****         return FALSE;
+ 273              		.loc 1 355 9 is_stmt 1 view .LVU82
+ 274 00c8 6FF08201 		mvn	r1, #130
+ 275 00cc 3046     		mov	r0, r6
+ 276 00ce 9FE7     		b	.L28
+ 277              	.LVL23:
+ 278              	.L18:
+ 279              	.LBB11:
+ 280              	.LBB10:
+ 304:libscpi/src/units.c ****             return &units[i];
+ 281              		.loc 1 304 9 view .LVU83
+ 304:libscpi/src/units.c ****             return &units[i];
+ 282              		.loc 1 304 13 is_stmt 0 view .LVU84
+ 283 00d0 1046     		mov	r0, r2
+ 284 00d2 0192     		str	r2, [sp, #4]
+ 285 00d4 FFF7FEFF 		bl	strlen
+ 286              	.LVL24:
+ARM GAS  /tmp/cchzUUmK.s 			page 15
+
+
+ 287 00d8 019A     		ldr	r2, [sp, #4]
+ 288 00da 0346     		mov	r3, r0
+ 289 00dc 4946     		mov	r1, r9
+ 290 00de 4046     		mov	r0, r8
+ 291 00e0 FFF7FEFF 		bl	compareStr
+ 292              	.LVL25:
+ 293 00e4 1037     		adds	r7, r7, #16
+ 304:libscpi/src/units.c ****             return &units[i];
+ 294              		.loc 1 304 12 view .LVU85
+ 295 00e6 0546     		mov	r5, r0
+ 296 00e8 0028     		cmp	r0, #0
+ 297 00ea EAD0     		beq	.L16
+ 298              	.LVL26:
+ 304:libscpi/src/units.c ****             return &units[i];
+ 299              		.loc 1 304 12 view .LVU86
+ 300              	.LBE10:
+ 301              	.LBE11:
+ 354:libscpi/src/units.c ****         SCPI_ErrorPush(context, SCPI_ERROR_INVALID_SUFFIX);
+ 302              		.loc 1 354 5 is_stmt 1 view .LVU87
+ 359:libscpi/src/units.c ****     value->unit = unitDef->unit;
+ 303              		.loc 1 359 5 view .LVU88
+ 359:libscpi/src/units.c ****     value->unit = unitDef->unit;
+ 304              		.loc 1 359 26 is_stmt 0 view .LVU89
+ 305 00ec DAE90223 		ldrd	r2, [r10, #8]
+ 306 00f0 D4E90201 		ldrd	r0, [r4, #8]
+ 307 00f4 FFF7FEFF 		bl	__aeabi_dmul
+ 308              	.LVL27:
+ 309 00f8 C4E90201 		strd	r0, [r4, #8]
+ 360:libscpi/src/units.c **** 
+ 310              		.loc 1 360 5 is_stmt 1 view .LVU90
+ 360:libscpi/src/units.c **** 
+ 311              		.loc 1 360 17 is_stmt 0 view .LVU91
+ 312 00fc 9AF80430 		ldrb	r3, [r10, #4]	@ zero_extendqisi2
+ 313 0100 D7E7     		b	.L30
+ 314              	.LVL28:
+ 315              	.L10:
+ 360:libscpi/src/units.c **** 
+ 316              		.loc 1 360 17 view .LVU92
+ 317              	.LBE12:
+ 318              	.LBE13:
+ 451:libscpi/src/units.c ****             scpiLex_CharacterProgramData(&state, &token);
+ 319              		.loc 1 451 13 is_stmt 1 view .LVU93
+ 320 0102 03A9     		add	r1, sp, #12
+ 321 0104 06A8     		add	r0, sp, #24
+ 322 0106 FFF7FEFF 		bl	scpiLex_WhiteSpace
+ 323              	.LVL29:
+ 452:libscpi/src/units.c **** 
+ 324              		.loc 1 452 13 view .LVU94
+ 325 010a 03A9     		add	r1, sp, #12
+ 326 010c 06A8     		add	r0, sp, #24
+ 327 010e FFF7FEFF 		bl	scpiLex_CharacterProgramData
+ 328              	.LVL30:
+ 455:libscpi/src/units.c **** 
+ 329              		.loc 1 455 13 view .LVU95
+ 455:libscpi/src/units.c **** 
+ 330              		.loc 1 455 22 is_stmt 0 view .LVU96
+ 331 0112 02AB     		add	r3, sp, #8
+ARM GAS  /tmp/cchzUUmK.s 			page 16
+
+
+ 332 0114 3A46     		mov	r2, r7
+ 333 0116 03A9     		add	r1, sp, #12
+ 334 0118 3046     		mov	r0, r6
+ 335 011a FFF7FEFF 		bl	SCPI_ParamToChoice
+ 336              	.LVL31:
+ 457:libscpi/src/units.c ****             value->content.tag = tag;
+ 337              		.loc 1 457 28 view .LVU97
+ 338 011e 0123     		movs	r3, #1
+ 339 0120 2370     		strb	r3, [r4]
+ 458:libscpi/src/units.c **** 
+ 340              		.loc 1 458 32 view .LVU98
+ 341 0122 029B     		ldr	r3, [sp, #8]
+ 342 0124 A360     		str	r3, [r4, #8]
+ 455:libscpi/src/units.c **** 
+ 343              		.loc 1 455 22 view .LVU99
+ 344 0126 0546     		mov	r5, r0
+ 345              	.LVL32:
+ 457:libscpi/src/units.c ****             value->content.tag = tag;
+ 346              		.loc 1 457 13 is_stmt 1 view .LVU100
+ 458:libscpi/src/units.c **** 
+ 347              		.loc 1 458 13 view .LVU101
+ 460:libscpi/src/units.c ****         default:
+ 348              		.loc 1 460 13 view .LVU102
+ 349 0128 A0E7     		b	.L20
+ 350              	.L32:
+ 351 012a 00BF     		.align	2
+ 352              	.L31:
+ 353 012c CAFEFFFF 		.word	-310
+ 354              		.cfi_endproc
+ 355              	.LFE3:
+ 357              		.global	__aeabi_dcmpeq
+ 358              		.section	.rodata.SCPI_NumberToStr.str1.1,"aMS",%progbits,1
+ 359              	.LC0:
+ 360 0000 2000     		.ascii	" \000"
+ 361              		.section	.text.SCPI_NumberToStr,"ax",%progbits
+ 362              		.align	1
+ 363              		.global	SCPI_NumberToStr
+ 364              		.syntax unified
+ 365              		.thumb
+ 366              		.thumb_func
+ 367              		.fpu fpv4-sp-d16
+ 369              	SCPI_NumberToStr:
+ 370              	.LVL33:
+ 371              	.LFB4:
+ 467:libscpi/src/units.c **** 
+ 468:libscpi/src/units.c **** /**
+ 469:libscpi/src/units.c ****  * Convert scpi_number_t to string
+ 470:libscpi/src/units.c ****  * @param context
+ 471:libscpi/src/units.c ****  * @param value number value
+ 472:libscpi/src/units.c ****  * @param str target string
+ 473:libscpi/src/units.c ****  * @param len max length of string including null-character termination
+ 474:libscpi/src/units.c ****  * @return number of chars written to string
+ 475:libscpi/src/units.c ****  */
+ 476:libscpi/src/units.c **** size_t SCPI_NumberToStr(scpi_t * context, const scpi_choice_def_t * special, scpi_number_t * value,
+ 372              		.loc 1 476 125 view -0
+ 373              		.cfi_startproc
+ 374              		@ args = 4, pretend = 0, frame = 8
+ARM GAS  /tmp/cchzUUmK.s 			page 17
+
+
+ 375              		@ frame_needed = 0, uses_anonymous_args = 0
+ 477:libscpi/src/units.c ****     const char * type;
+ 376              		.loc 1 477 5 view .LVU104
+ 478:libscpi/src/units.c ****     const char * unit;
+ 377              		.loc 1 478 5 view .LVU105
+ 479:libscpi/src/units.c ****     size_t result;
+ 378              		.loc 1 479 5 view .LVU106
+ 480:libscpi/src/units.c **** 
+ 481:libscpi/src/units.c ****     if (!value || !str || len==0) {
+ 379              		.loc 1 481 5 view .LVU107
+ 476:libscpi/src/units.c ****     const char * type;
+ 380              		.loc 1 476 125 is_stmt 0 view .LVU108
+ 381 0000 2DE9F74F 		push	{r0, r1, r2, r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 382              	.LCFI4:
+ 383              		.cfi_def_cfa_offset 48
+ 384              		.cfi_offset 4, -36
+ 385              		.cfi_offset 5, -32
+ 386              		.cfi_offset 6, -28
+ 387              		.cfi_offset 7, -24
+ 388              		.cfi_offset 8, -20
+ 389              		.cfi_offset 9, -16
+ 390              		.cfi_offset 10, -12
+ 391              		.cfi_offset 11, -8
+ 392              		.cfi_offset 14, -4
+ 476:libscpi/src/units.c ****     const char * type;
+ 393              		.loc 1 476 125 view .LVU109
+ 394 0004 0C9F     		ldr	r7, [sp, #48]
+ 395 0006 8046     		mov	r8, r0
+ 396 0008 1E46     		mov	r6, r3
+ 397 000a 0846     		mov	r0, r1
+ 398              	.LVL34:
+ 399              		.loc 1 481 8 view .LVU110
+ 400 000c 1546     		mov	r5, r2
+ 401 000e 002A     		cmp	r2, #0
+ 402 0010 43D0     		beq	.L43
+ 403              		.loc 1 481 16 discriminator 1 view .LVU111
+ 404 0012 002B     		cmp	r3, #0
+ 405 0014 43D0     		beq	.L44
+ 406              		.loc 1 481 24 discriminator 2 view .LVU112
+ 407 0016 002F     		cmp	r7, #0
+ 408 0018 43D0     		beq	.L45
+ 482:libscpi/src/units.c ****         return 0;
+ 483:libscpi/src/units.c ****     }
+ 484:libscpi/src/units.c **** 
+ 485:libscpi/src/units.c ****     if (value->special) {
+ 409              		.loc 1 485 5 is_stmt 1 view .LVU113
+ 410              		.loc 1 485 8 is_stmt 0 view .LVU114
+ 411 001a 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 412              	.LVL35:
+ 413              		.loc 1 485 8 view .LVU115
+ 414 001c BBB1     		cbz	r3, .L35
+ 486:libscpi/src/units.c ****         if (SCPI_ChoiceToName(special, value->content.tag, &type)) {
+ 415              		.loc 1 486 9 is_stmt 1 view .LVU116
+ 416              		.loc 1 486 13 is_stmt 0 view .LVU117
+ 417 001e A968     		ldr	r1, [r5, #8]
+ 418              	.LVL36:
+ 419              		.loc 1 486 13 view .LVU118
+ARM GAS  /tmp/cchzUUmK.s 			page 18
+
+
+ 420 0020 01AA     		add	r2, sp, #4
+ 421              	.LVL37:
+ 422              		.loc 1 486 13 view .LVU119
+ 423 0022 FFF7FEFF 		bl	SCPI_ChoiceToName
+ 424              	.LVL38:
+ 425              		.loc 1 486 12 view .LVU120
+ 426 0026 78B1     		cbz	r0, .L36
+ 487:libscpi/src/units.c ****             strncpy(str, type, len);
+ 427              		.loc 1 487 13 is_stmt 1 view .LVU121
+ 428 0028 0199     		ldr	r1, [sp, #4]
+ 429 002a 3A46     		mov	r2, r7
+ 430 002c 3046     		mov	r0, r6
+ 431 002e FFF7FEFF 		bl	strncpy
+ 432              	.LVL39:
+ 488:libscpi/src/units.c ****             result = SCPIDEFINE_strnlen(str, len - 1);
+ 433              		.loc 1 488 13 view .LVU122
+ 434              		.loc 1 488 22 is_stmt 0 view .LVU123
+ 435 0032 791E     		subs	r1, r7, #1
+ 436 0034 3046     		mov	r0, r6
+ 437 0036 FFF7FEFF 		bl	strnlen
+ 438              	.LVL40:
+ 489:libscpi/src/units.c ****             str[result] = '\0';
+ 439              		.loc 1 489 25 view .LVU124
+ 440 003a 0023     		movs	r3, #0
+ 441 003c 3354     		strb	r3, [r6, r0]
+ 488:libscpi/src/units.c ****             result = SCPIDEFINE_strnlen(str, len - 1);
+ 442              		.loc 1 488 22 view .LVU125
+ 443 003e 0446     		mov	r4, r0
+ 444              	.LVL41:
+ 445              		.loc 1 489 13 is_stmt 1 view .LVU126
+ 490:libscpi/src/units.c ****             return result;
+ 446              		.loc 1 490 13 view .LVU127
+ 447              	.L33:
+ 491:libscpi/src/units.c ****         } else {
+ 492:libscpi/src/units.c ****             str[0] = '\0';
+ 493:libscpi/src/units.c ****             return 0;
+ 494:libscpi/src/units.c ****         }
+ 495:libscpi/src/units.c ****     }
+ 496:libscpi/src/units.c **** 
+ 497:libscpi/src/units.c ****     result = SCPI_DoubleToStr(value->content.value, str, len);
+ 498:libscpi/src/units.c **** 
+ 499:libscpi/src/units.c ****     if (result + 1 < len) {
+ 500:libscpi/src/units.c ****         unit = translateUnitInverse(context->units, value->unit);
+ 501:libscpi/src/units.c **** 
+ 502:libscpi/src/units.c ****         if (unit) {
+ 503:libscpi/src/units.c ****             strncat(str, " ", len - result);
+ 504:libscpi/src/units.c ****             if (result + 2 < len) {
+ 505:libscpi/src/units.c ****                 strncat(str, unit, len - result - 1);
+ 506:libscpi/src/units.c ****             }
+ 507:libscpi/src/units.c ****             result = strlen(str);
+ 508:libscpi/src/units.c ****         }
+ 509:libscpi/src/units.c ****     }
+ 510:libscpi/src/units.c **** 
+ 511:libscpi/src/units.c ****     return result;
+ 512:libscpi/src/units.c **** }
+ 448              		.loc 1 512 1 is_stmt 0 view .LVU128
+ 449 0040 2046     		mov	r0, r4
+ARM GAS  /tmp/cchzUUmK.s 			page 19
+
+
+ 450 0042 03B0     		add	sp, sp, #12
+ 451              	.LCFI5:
+ 452              		.cfi_remember_state
+ 453              		.cfi_def_cfa_offset 36
+ 454              		@ sp needed
+ 455 0044 BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 456              	.LVL42:
+ 457              	.L36:
+ 458              	.LCFI6:
+ 459              		.cfi_restore_state
+ 492:libscpi/src/units.c ****             return 0;
+ 460              		.loc 1 492 13 is_stmt 1 view .LVU129
+ 492:libscpi/src/units.c ****             return 0;
+ 461              		.loc 1 492 20 is_stmt 0 view .LVU130
+ 462 0048 3070     		strb	r0, [r6]
+ 493:libscpi/src/units.c ****         }
+ 463              		.loc 1 493 13 is_stmt 1 view .LVU131
+ 464              	.LVL43:
+ 465              	.L49:
+ 507:libscpi/src/units.c ****         }
+ 466              		.loc 1 507 22 is_stmt 0 view .LVU132
+ 467 004a 0446     		mov	r4, r0
+ 468              	.LVL44:
+ 507:libscpi/src/units.c ****         }
+ 469              		.loc 1 507 22 view .LVU133
+ 470 004c F8E7     		b	.L33
+ 471              	.LVL45:
+ 472              	.L35:
+ 497:libscpi/src/units.c **** 
+ 473              		.loc 1 497 5 is_stmt 1 view .LVU134
+ 497:libscpi/src/units.c **** 
+ 474              		.loc 1 497 14 is_stmt 0 view .LVU135
+ 475 004e 92ED020B 		vldr.64	d0, [r2, #8]
+ 476 0052 3946     		mov	r1, r7
+ 477 0054 3046     		mov	r0, r6
+ 478              	.LVL46:
+ 497:libscpi/src/units.c **** 
+ 479              		.loc 1 497 14 view .LVU136
+ 480 0056 FFF7FEFF 		bl	SCPI_DoubleToStr
+ 481              	.LVL47:
+ 499:libscpi/src/units.c ****         unit = translateUnitInverse(context->units, value->unit);
+ 482              		.loc 1 499 16 view .LVU137
+ 483 005a 431C     		adds	r3, r0, #1
+ 499:libscpi/src/units.c ****         unit = translateUnitInverse(context->units, value->unit);
+ 484              		.loc 1 499 8 view .LVU138
+ 485 005c BB42     		cmp	r3, r7
+ 497:libscpi/src/units.c **** 
+ 486              		.loc 1 497 14 view .LVU139
+ 487 005e 0446     		mov	r4, r0
+ 488              	.LVL48:
+ 499:libscpi/src/units.c ****         unit = translateUnitInverse(context->units, value->unit);
+ 489              		.loc 1 499 5 is_stmt 1 view .LVU140
+ 499:libscpi/src/units.c ****         unit = translateUnitInverse(context->units, value->unit);
+ 490              		.loc 1 499 8 is_stmt 0 view .LVU141
+ 491 0060 EED2     		bcs	.L33
+ 500:libscpi/src/units.c **** 
+ 492              		.loc 1 500 9 is_stmt 1 view .LVU142
+ARM GAS  /tmp/cchzUUmK.s 			page 20
+
+
+ 500:libscpi/src/units.c **** 
+ 493              		.loc 1 500 16 is_stmt 0 view .LVU143
+ 494 0062 D8F85C30 		ldr	r3, [r8, #92]
+ 495 0066 95F810B0 		ldrb	fp, [r5, #16]	@ zero_extendqisi2
+ 496              	.LVL49:
+ 497              	.LBB16:
+ 498              	.LBI16:
+ 318:libscpi/src/units.c ****     int i;
+ 499              		.loc 1 318 21 is_stmt 1 view .LVU144
+ 500              	.LBB17:
+ 319:libscpi/src/units.c **** 
+ 501              		.loc 1 319 5 view .LVU145
+ 321:libscpi/src/units.c ****         return NULL;
+ 502              		.loc 1 321 5 view .LVU146
+ 321:libscpi/src/units.c ****         return NULL;
+ 503              		.loc 1 321 8 is_stmt 0 view .LVU147
+ 504 006a 002B     		cmp	r3, #0
+ 505 006c E8D0     		beq	.L33
+ 326:libscpi/src/units.c ****             return units[i].name;
+ 506              		.loc 1 326 37 view .LVU148
+ 507 006e DFF86090 		ldr	r9, .L50+4
+ 508 0072 1D46     		mov	r5, r3
+ 509              	.LVL50:
+ 326:libscpi/src/units.c ****             return units[i].name;
+ 510              		.loc 1 326 37 view .LVU149
+ 511 0074 4FF00008 		mov	r8, #0
+ 512              	.LVL51:
+ 513              	.L37:
+ 325:libscpi/src/units.c ****         if ((units[i].unit == unit) && (units[i].mult == 1)) {
+ 514              		.loc 1 325 17 is_stmt 1 view .LVU150
+ 325:libscpi/src/units.c ****         if ((units[i].unit == unit) && (units[i].mult == 1)) {
+ 515              		.loc 1 325 25 is_stmt 0 view .LVU151
+ 516 0078 D5F800A0 		ldr	r10, [r5]
+ 325:libscpi/src/units.c ****         if ((units[i].unit == unit) && (units[i].mult == 1)) {
+ 517              		.loc 1 325 5 view .LVU152
+ 518 007c BAF1000F 		cmp	r10, #0
+ 519 0080 DED0     		beq	.L33
+ 326:libscpi/src/units.c ****             return units[i].name;
+ 520              		.loc 1 326 9 is_stmt 1 view .LVU153
+ 326:libscpi/src/units.c ****             return units[i].name;
+ 521              		.loc 1 326 12 is_stmt 0 view .LVU154
+ 522 0082 2B79     		ldrb	r3, [r5, #4]	@ zero_extendqisi2
+ 523 0084 5B45     		cmp	r3, fp
+ 524 0086 06D1     		bne	.L38
+ 326:libscpi/src/units.c ****             return units[i].name;
+ 525              		.loc 1 326 37 view .LVU155
+ 526 0088 D5E90201 		ldrd	r0, [r5, #8]
+ 527 008c 4246     		mov	r2, r8
+ 528 008e 4B46     		mov	r3, r9
+ 529 0090 FFF7FEFF 		bl	__aeabi_dcmpeq
+ 530              	.LVL52:
+ 531 0094 38B9     		cbnz	r0, .L39
+ 532              	.L38:
+ 325:libscpi/src/units.c ****         if ((units[i].unit == unit) && (units[i].mult == 1)) {
+ 533              		.loc 1 325 40 is_stmt 1 view .LVU156
+ 534 0096 1035     		adds	r5, r5, #16
+ 535 0098 EEE7     		b	.L37
+ARM GAS  /tmp/cchzUUmK.s 			page 21
+
+
+ 536              	.LVL53:
+ 537              	.L43:
+ 325:libscpi/src/units.c ****         if ((units[i].unit == unit) && (units[i].mult == 1)) {
+ 538              		.loc 1 325 40 is_stmt 0 view .LVU157
+ 539              	.LBE17:
+ 540              	.LBE16:
+ 482:libscpi/src/units.c ****     }
+ 541              		.loc 1 482 16 view .LVU158
+ 542 009a 1446     		mov	r4, r2
+ 543 009c D0E7     		b	.L33
+ 544              	.L44:
+ 482:libscpi/src/units.c ****     }
+ 545              		.loc 1 482 16 view .LVU159
+ 546 009e 1C46     		mov	r4, r3
+ 547 00a0 CEE7     		b	.L33
+ 548              	.L45:
+ 482:libscpi/src/units.c ****     }
+ 549              		.loc 1 482 16 view .LVU160
+ 550 00a2 3C46     		mov	r4, r7
+ 551 00a4 CCE7     		b	.L33
+ 552              	.LVL54:
+ 553              	.L39:
+ 502:libscpi/src/units.c ****             strncat(str, " ", len - result);
+ 554              		.loc 1 502 9 is_stmt 1 view .LVU161
+ 503:libscpi/src/units.c ****             if (result + 2 < len) {
+ 555              		.loc 1 503 13 view .LVU162
+ 556 00a6 3D1B     		subs	r5, r7, r4
+ 557 00a8 0849     		ldr	r1, .L50
+ 558 00aa 2A46     		mov	r2, r5
+ 559 00ac 3046     		mov	r0, r6
+ 504:libscpi/src/units.c ****                 strncat(str, unit, len - result - 1);
+ 560              		.loc 1 504 24 is_stmt 0 view .LVU163
+ 561 00ae 0234     		adds	r4, r4, #2
+ 562              	.LVL55:
+ 503:libscpi/src/units.c ****             if (result + 2 < len) {
+ 563              		.loc 1 503 13 view .LVU164
+ 564 00b0 FFF7FEFF 		bl	strncat
+ 565              	.LVL56:
+ 504:libscpi/src/units.c ****                 strncat(str, unit, len - result - 1);
+ 566              		.loc 1 504 13 is_stmt 1 view .LVU165
+ 504:libscpi/src/units.c ****                 strncat(str, unit, len - result - 1);
+ 567              		.loc 1 504 16 is_stmt 0 view .LVU166
+ 568 00b4 BC42     		cmp	r4, r7
+ 569 00b6 04D2     		bcs	.L42
+ 505:libscpi/src/units.c ****             }
+ 570              		.loc 1 505 17 is_stmt 1 view .LVU167
+ 571 00b8 6A1E     		subs	r2, r5, #1
+ 572 00ba 5146     		mov	r1, r10
+ 573 00bc 3046     		mov	r0, r6
+ 574 00be FFF7FEFF 		bl	strncat
+ 575              	.LVL57:
+ 576              	.L42:
+ 507:libscpi/src/units.c ****         }
+ 577              		.loc 1 507 13 view .LVU168
+ 507:libscpi/src/units.c ****         }
+ 578              		.loc 1 507 22 is_stmt 0 view .LVU169
+ 579 00c2 3046     		mov	r0, r6
+ARM GAS  /tmp/cchzUUmK.s 			page 22
+
+
+ 580 00c4 FFF7FEFF 		bl	strlen
+ 581              	.LVL58:
+ 582 00c8 BFE7     		b	.L49
+ 583              	.L51:
+ 584 00ca 00BF     		.align	2
+ 585              	.L50:
+ 586 00cc 00000000 		.word	.LC0
+ 587 00d0 0000F03F 		.word	1072693248
+ 588              		.cfi_endproc
+ 589              	.LFE4:
+ 591              		.global	scpi_special_numbers_def
+ 592              		.section	.rodata.str1.1,"aMS",%progbits,1
+ 593              	.LC1:
+ 594 0000 4D494E69 		.ascii	"MINimum\000"
+ 594      6D756D00 
+ 595              	.LC2:
+ 596 0008 4D415869 		.ascii	"MAXimum\000"
+ 596      6D756D00 
+ 597              	.LC3:
+ 598 0010 44454661 		.ascii	"DEFault\000"
+ 598      756C7400 
+ 599              	.LC4:
+ 600 0018 555000   		.ascii	"UP\000"
+ 601              	.LC5:
+ 602 001b 444F574E 		.ascii	"DOWN\000"
+ 602      00
+ 603              	.LC6:
+ 604 0020 4E414E00 		.ascii	"NAN\000"
+ 605              	.LC7:
+ 606 0024 494E4669 		.ascii	"INFinity\000"
+ 606      6E697479 
+ 606      00
+ 607              	.LC8:
+ 608 002d 4E494E46 		.ascii	"NINF\000"
+ 608      00
+ 609              	.LC9:
+ 610 0032 4155544F 		.ascii	"AUTO\000"
+ 610      00
+ 611              		.global	scpi_units_def
+ 612              	.LC10:
+ 613 0037 504600   		.ascii	"PF\000"
+ 614              	.LC11:
+ 615 003a 4E4600   		.ascii	"NF\000"
+ 616              	.LC12:
+ 617 003d 554600   		.ascii	"UF\000"
+ 618              	.LC13:
+ 619 0040 4D4600   		.ascii	"MF\000"
+ 620              	.LC14:
+ 621 0043 4600     		.ascii	"F\000"
+ 622              	.LC15:
+ 623 0045 554100   		.ascii	"UA\000"
+ 624              	.LC16:
+ 625 0048 4D4100   		.ascii	"MA\000"
+ 626              	.LC17:
+ 627 004b 4100     		.ascii	"A\000"
+ 628              	.LC18:
+ 629 004d 4B4100   		.ascii	"KA\000"
+ARM GAS  /tmp/cchzUUmK.s 			page 23
+
+
+ 630              	.LC19:
+ 631 0050 555600   		.ascii	"UV\000"
+ 632              	.LC20:
+ 633 0053 4D5600   		.ascii	"MV\000"
+ 634              	.LC21:
+ 635 0056 5600     		.ascii	"V\000"
+ 636              	.LC22:
+ 637 0058 4B5600   		.ascii	"KV\000"
+ 638              	.LC23:
+ 639 005b 4F484D00 		.ascii	"OHM\000"
+ 640              	.LC24:
+ 641 005f 4B4F484D 		.ascii	"KOHM\000"
+ 641      00
+ 642              	.LC25:
+ 643 0064 4D4F484D 		.ascii	"MOHM\000"
+ 643      00
+ 644              	.LC26:
+ 645 0069 554800   		.ascii	"UH\000"
+ 646              	.LC27:
+ 647 006c 4D4800   		.ascii	"MH\000"
+ 648              	.LC28:
+ 649 006f 4800     		.ascii	"H\000"
+ 650              	.LC29:
+ 651 0071 485A00   		.ascii	"HZ\000"
+ 652              	.LC30:
+ 653 0074 4B485A00 		.ascii	"KHZ\000"
+ 654              	.LC31:
+ 655 0078 4D485A00 		.ascii	"MHZ\000"
+ 656              	.LC32:
+ 657 007c 47485A00 		.ascii	"GHZ\000"
+ 658              	.LC33:
+ 659 0080 5700     		.ascii	"W\000"
+ 660              	.LC34:
+ 661 0082 44424D00 		.ascii	"DBM\000"
+ 662              	.LC35:
+ 663 0086 44424D57 		.ascii	"DBMW\000"
+ 663      00
+ 664              		.section	.rodata.scpi_special_numbers_def,"a"
+ 665              		.align	2
+ 668              	scpi_special_numbers_def:
+ 669 0000 00000000 		.word	.LC1
+ 670 0004 01000000 		.word	1
+ 671 0008 08000000 		.word	.LC2
+ 672 000c 02000000 		.word	2
+ 673 0010 10000000 		.word	.LC3
+ 674 0014 03000000 		.word	3
+ 675 0018 18000000 		.word	.LC4
+ 676 001c 04000000 		.word	4
+ 677 0020 1B000000 		.word	.LC5
+ 678 0024 05000000 		.word	5
+ 679 0028 20000000 		.word	.LC6
+ 680 002c 06000000 		.word	6
+ 681 0030 24000000 		.word	.LC7
+ 682 0034 07000000 		.word	7
+ 683 0038 2D000000 		.word	.LC8
+ 684 003c 08000000 		.word	8
+ 685 0040 32000000 		.word	.LC9
+ARM GAS  /tmp/cchzUUmK.s 			page 24
+
+
+ 686 0044 09000000 		.word	9
+ 687 0048 00000000 		.word	0
+ 688 004c FFFFFFFF 		.word	-1
+ 689              		.section	.rodata.scpi_units_def,"a"
+ 690              		.align	3
+ 693              	scpi_units_def:
+ 694 0000 37000000 		.word	.LC10
+ 695 0004 11       		.byte	17
+ 696 0005 000000   		.space	3
+ 697 0008 11EA2D81 		.word	2167269905
+ 698 000c 9997713D 		.word	1030854553
+ 699 0010 3A000000 		.word	.LC11
+ 700 0014 11       		.byte	17
+ 701 0015 000000   		.space	3
+ 702 0018 95D626E8 		.word	3894859413
+ 703 001c 0B2E113E 		.word	1041313291
+ 704 0020 3D000000 		.word	.LC12
+ 705 0024 11       		.byte	17
+ 706 0025 000000   		.space	3
+ 707 0028 8DEDB5A0 		.word	2696277389
+ 708 002c F7C6B03E 		.word	1051772663
+ 709 0030 40000000 		.word	.LC13
+ 710 0034 11       		.byte	17
+ 711 0035 000000   		.space	3
+ 712 0038 FCA9F1D2 		.word	3539053052
+ 713 003c 4D62503F 		.word	1062232653
+ 714 0040 43000000 		.word	.LC14
+ 715 0044 11       		.byte	17
+ 716 0045 000000   		.space	3
+ 717 0048 00000000 		.word	0
+ 718 004c 0000F03F 		.word	1072693248
+ 719 0050 45000000 		.word	.LC15
+ 720 0054 02       		.byte	2
+ 721 0055 000000   		.space	3
+ 722 0058 8DEDB5A0 		.word	2696277389
+ 723 005c F7C6B03E 		.word	1051772663
+ 724 0060 48000000 		.word	.LC16
+ 725 0064 02       		.byte	2
+ 726 0065 000000   		.space	3
+ 727 0068 FCA9F1D2 		.word	3539053052
+ 728 006c 4D62503F 		.word	1062232653
+ 729 0070 4B000000 		.word	.LC17
+ 730 0074 02       		.byte	2
+ 731 0075 000000   		.space	3
+ 732 0078 00000000 		.word	0
+ 733 007c 0000F03F 		.word	1072693248
+ 734 0080 4D000000 		.word	.LC18
+ 735 0084 02       		.byte	2
+ 736 0085 000000   		.space	3
+ 737 0088 00000000 		.word	0
+ 738 008c 00408F40 		.word	1083129856
+ 739 0090 50000000 		.word	.LC19
+ 740 0094 01       		.byte	1
+ 741 0095 000000   		.space	3
+ 742 0098 8DEDB5A0 		.word	2696277389
+ 743 009c F7C6B03E 		.word	1051772663
+ 744 00a0 53000000 		.word	.LC20
+ARM GAS  /tmp/cchzUUmK.s 			page 25
+
+
+ 745 00a4 01       		.byte	1
+ 746 00a5 000000   		.space	3
+ 747 00a8 FCA9F1D2 		.word	3539053052
+ 748 00ac 4D62503F 		.word	1062232653
+ 749 00b0 56000000 		.word	.LC21
+ 750 00b4 01       		.byte	1
+ 751 00b5 000000   		.space	3
+ 752 00b8 00000000 		.word	0
+ 753 00bc 0000F03F 		.word	1072693248
+ 754 00c0 58000000 		.word	.LC22
+ 755 00c4 01       		.byte	1
+ 756 00c5 000000   		.space	3
+ 757 00c8 00000000 		.word	0
+ 758 00cc 00408F40 		.word	1083129856
+ 759 00d0 5B000000 		.word	.LC23
+ 760 00d4 03       		.byte	3
+ 761 00d5 000000   		.space	3
+ 762 00d8 00000000 		.word	0
+ 763 00dc 0000F03F 		.word	1072693248
+ 764 00e0 5F000000 		.word	.LC24
+ 765 00e4 03       		.byte	3
+ 766 00e5 000000   		.space	3
+ 767 00e8 00000000 		.word	0
+ 768 00ec 00408F40 		.word	1083129856
+ 769 00f0 64000000 		.word	.LC25
+ 770 00f4 03       		.byte	3
+ 771 00f5 000000   		.space	3
+ 772 00f8 00000000 		.word	0
+ 773 00fc 80842E41 		.word	1093567616
+ 774 0100 69000000 		.word	.LC26
+ 775 0104 18       		.byte	24
+ 776 0105 000000   		.space	3
+ 777 0108 8DEDB5A0 		.word	2696277389
+ 778 010c F7C6B03E 		.word	1051772663
+ 779 0110 6C000000 		.word	.LC27
+ 780 0114 18       		.byte	24
+ 781 0115 000000   		.space	3
+ 782 0118 FCA9F1D2 		.word	3539053052
+ 783 011c 4D62503F 		.word	1062232653
+ 784 0120 6F000000 		.word	.LC28
+ 785 0124 18       		.byte	24
+ 786 0125 000000   		.space	3
+ 787 0128 00000000 		.word	0
+ 788 012c 0000F03F 		.word	1072693248
+ 789 0130 71000000 		.word	.LC29
+ 790 0134 04       		.byte	4
+ 791 0135 000000   		.space	3
+ 792 0138 00000000 		.word	0
+ 793 013c 0000F03F 		.word	1072693248
+ 794 0140 74000000 		.word	.LC30
+ 795 0144 04       		.byte	4
+ 796 0145 000000   		.space	3
+ 797 0148 00000000 		.word	0
+ 798 014c 00408F40 		.word	1083129856
+ 799 0150 78000000 		.word	.LC31
+ 800 0154 04       		.byte	4
+ 801 0155 000000   		.space	3
+ARM GAS  /tmp/cchzUUmK.s 			page 26
+
+
+ 802 0158 00000000 		.word	0
+ 803 015c 80842E41 		.word	1093567616
+ 804 0160 7C000000 		.word	.LC32
+ 805 0164 04       		.byte	4
+ 806 0165 000000   		.space	3
+ 807 0168 00000000 		.word	0
+ 808 016c 65CDCD41 		.word	1104006501
+ 809 0170 80000000 		.word	.LC33
+ 810 0174 25       		.byte	37
+ 811 0175 000000   		.space	3
+ 812 0178 00000000 		.word	0
+ 813 017c 0000F03F 		.word	1072693248
+ 814 0180 82000000 		.word	.LC34
+ 815 0184 26       		.byte	38
+ 816 0185 000000   		.space	3
+ 817 0188 00000000 		.word	0
+ 818 018c 0000F03F 		.word	1072693248
+ 819 0190 86000000 		.word	.LC35
+ 820 0194 26       		.byte	38
+ 821 0195 000000   		.space	3
+ 822 0198 00000000 		.word	0
+ 823 019c 0000F03F 		.word	1072693248
+ 824 01a0 00000000 		.word	0
+ 825 01a4 00       		.byte	0
+ 826 01a5 000000   		.space	3
+ 827 01a8 00000000 		.word	0
+ 828 01ac 00000000 		.word	0
+ 829              		.text
+ 830              	.Letext0:
+ 831              		.file 2 "/usr/lib/gcc/arm-none-eabi/9.2.1/include/stddef.h"
+ 832              		.file 3 "/usr/include/newlib/sys/_types.h"
+ 833              		.file 4 "/usr/include/newlib/sys/reent.h"
+ 834              		.file 5 "/usr/include/newlib/sys/lock.h"
+ 835              		.file 6 "/usr/lib/gcc/arm-none-eabi/9.2.1/include/stdint.h"
+ 836              		.file 7 "libscpi/inc/scpi/types.h"
+ 837              		.file 8 "libscpi/inc/scpi/parser.h"
+ 838              		.file 9 "libscpi/inc/scpi/units.h"
+ 839              		.file 10 "/usr/include/newlib/string.h"
+ 840              		.file 11 "libscpi/inc/scpi/utils.h"
+ 841              		.file 12 "libscpi/src/utils_private.h"
+ 842              		.file 13 "libscpi/inc/scpi/error.h"
+ 843              		.file 14 "libscpi/src/lexer_private.h"
+ARM GAS  /tmp/cchzUUmK.s 			page 27
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 units.c
+     /tmp/cchzUUmK.s:19     .text.SCPI_ParamNumber:0000000000000000 $t
+     /tmp/cchzUUmK.s:27     .text.SCPI_ParamNumber:0000000000000000 SCPI_ParamNumber
+     /tmp/cchzUUmK.s:126    .text.SCPI_ParamNumber:0000000000000046 $d
+     /tmp/cchzUUmK.s:132    .text.SCPI_ParamNumber:000000000000004c $t
+     /tmp/cchzUUmK.s:145    .text.SCPI_ParamNumber:000000000000005a $d
+     /tmp/cchzUUmK.s:147    .text.SCPI_ParamNumber:000000000000005c $t
+     /tmp/cchzUUmK.s:353    .text.SCPI_ParamNumber:000000000000012c $d
+     /tmp/cchzUUmK.s:362    .text.SCPI_NumberToStr:0000000000000000 $t
+     /tmp/cchzUUmK.s:369    .text.SCPI_NumberToStr:0000000000000000 SCPI_NumberToStr
+     /tmp/cchzUUmK.s:586    .text.SCPI_NumberToStr:00000000000000cc $d
+     /tmp/cchzUUmK.s:668    .rodata.scpi_special_numbers_def:0000000000000000 scpi_special_numbers_def
+     /tmp/cchzUUmK.s:693    .rodata.scpi_units_def:0000000000000000 scpi_units_def
+     /tmp/cchzUUmK.s:665    .rodata.scpi_special_numbers_def:0000000000000000 $d
+     /tmp/cchzUUmK.s:690    .rodata.scpi_units_def:0000000000000000 $d
+
+UNDEFINED SYMBOLS
+__aeabi_dmul
+SCPI_ErrorPush
+SCPI_Parameter
+SCPI_ParamToDouble
+scpiLex_DecimalNumericProgramData
+scpiLex_WhiteSpace
+scpiLex_SuffixProgramData
+skipWhitespace
+strlen
+compareStr
+scpiLex_CharacterProgramData
+SCPI_ParamToChoice
+__aeabi_dcmpeq
+SCPI_ChoiceToName
+strncpy
+strnlen
+SCPI_DoubleToStr
+strncat

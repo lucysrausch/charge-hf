@@ -1,0 +1,434 @@
+ARM GAS  /tmp/ccCXqSI0.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"usb_device.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.USBD_Clock_Config,"ax",%progbits
+  18              		.align	1
+  19              		.global	USBD_Clock_Config
+  20              		.arch armv7e-m
+  21              		.syntax unified
+  22              		.thumb
+  23              		.thumb_func
+  24              		.fpu fpv4-sp-d16
+  26              	USBD_Clock_Config:
+  27              	.LFB360:
+  28              		.file 1 "USB_Device/App/usb_device.c"
+   1:USB_Device/App/usb_device.c **** /* USER CODE BEGIN Header */
+   2:USB_Device/App/usb_device.c **** /**
+   3:USB_Device/App/usb_device.c ****   ******************************************************************************
+   4:USB_Device/App/usb_device.c ****   * @file    USB_Device/CDC_Standalone/USB_Device/App/usb_device.c
+   5:USB_Device/App/usb_device.c ****   * @author  MCD Application Team
+   6:USB_Device/App/usb_device.c ****   * @brief   This file implements the USB Device
+   7:USB_Device/App/usb_device.c ****   ******************************************************************************
+   8:USB_Device/App/usb_device.c ****   * @attention
+   9:USB_Device/App/usb_device.c ****   *
+  10:USB_Device/App/usb_device.c ****   * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
+  11:USB_Device/App/usb_device.c ****   * All rights reserved.</center></h2>
+  12:USB_Device/App/usb_device.c ****   *
+  13:USB_Device/App/usb_device.c ****   * This software component is licensed by ST under Ultimate Liberty license
+  14:USB_Device/App/usb_device.c ****   * SLA0044, the "License"; You may not use this file except in compliance with
+  15:USB_Device/App/usb_device.c ****   * the License. You may obtain a copy of the License at:
+  16:USB_Device/App/usb_device.c ****   *                             www.st.com/SLA0044
+  17:USB_Device/App/usb_device.c ****   *
+  18:USB_Device/App/usb_device.c ****   ******************************************************************************
+  19:USB_Device/App/usb_device.c ****   */
+  20:USB_Device/App/usb_device.c **** /* USER CODE END Header */
+  21:USB_Device/App/usb_device.c **** 
+  22:USB_Device/App/usb_device.c **** /* Includes ------------------------------------------------------------------*/
+  23:USB_Device/App/usb_device.c **** 
+  24:USB_Device/App/usb_device.c **** #include "usb_device.h"
+  25:USB_Device/App/usb_device.c **** #include "usbd_core.h"
+  26:USB_Device/App/usb_device.c **** #include "usbd_desc.h"
+  27:USB_Device/App/usb_device.c **** #include "usbd_cdc.h"
+  28:USB_Device/App/usb_device.c **** #include "usbd_cdc_if.h"
+  29:USB_Device/App/usb_device.c **** 
+  30:USB_Device/App/usb_device.c **** /* USER CODE BEGIN Includes */
+ARM GAS  /tmp/ccCXqSI0.s 			page 2
+
+
+  31:USB_Device/App/usb_device.c **** 
+  32:USB_Device/App/usb_device.c **** /* USER CODE END Includes */
+  33:USB_Device/App/usb_device.c **** 
+  34:USB_Device/App/usb_device.c **** /* USER CODE BEGIN PV */
+  35:USB_Device/App/usb_device.c **** /* Private variables ---------------------------------------------------------*/
+  36:USB_Device/App/usb_device.c **** 
+  37:USB_Device/App/usb_device.c **** __IO uint32_t remotewakeupon = 0;
+  38:USB_Device/App/usb_device.c **** uint8_t HID_Buffer[4];
+  39:USB_Device/App/usb_device.c **** extern PCD_HandleTypeDef hpcd_USB_FS;
+  40:USB_Device/App/usb_device.c **** 
+  41:USB_Device/App/usb_device.c **** /* USER CODE END PV */
+  42:USB_Device/App/usb_device.c **** 
+  43:USB_Device/App/usb_device.c **** /* USER CODE BEGIN PFP */
+  44:USB_Device/App/usb_device.c **** /* Private function prototypes -----------------------------------------------*/
+  45:USB_Device/App/usb_device.c **** void USBD_Clock_Config(void);
+  46:USB_Device/App/usb_device.c **** /* USER CODE END PFP */
+  47:USB_Device/App/usb_device.c **** 
+  48:USB_Device/App/usb_device.c **** extern void Error_Handler(void);
+  49:USB_Device/App/usb_device.c **** /* USB Device Core handle declaration. */
+  50:USB_Device/App/usb_device.c **** USBD_HandleTypeDef hUsbDeviceFS;
+  51:USB_Device/App/usb_device.c **** extern USBD_DescriptorsTypeDef CDC_Desc;
+  52:USB_Device/App/usb_device.c **** 
+  53:USB_Device/App/usb_device.c **** /*
+  54:USB_Device/App/usb_device.c ****  * -- Insert your variables declaration here --
+  55:USB_Device/App/usb_device.c ****  */
+  56:USB_Device/App/usb_device.c **** /* USER CODE BEGIN 0 */
+  57:USB_Device/App/usb_device.c **** 
+  58:USB_Device/App/usb_device.c **** /**
+  59:USB_Device/App/usb_device.c ****   * @brief USB Clock Configuration
+  60:USB_Device/App/usb_device.c ****   * @retval None
+  61:USB_Device/App/usb_device.c ****   */
+  62:USB_Device/App/usb_device.c **** void USBD_Clock_Config(void)
+  63:USB_Device/App/usb_device.c **** {
+  29              		.loc 1 63 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 88
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  64:USB_Device/App/usb_device.c ****   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  33              		.loc 1 64 3 view .LVU1
+  63:USB_Device/App/usb_device.c ****   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  34              		.loc 1 63 1 is_stmt 0 view .LVU2
+  35 0000 00B5     		push	{lr}
+  36              	.LCFI0:
+  37              		.cfi_def_cfa_offset 4
+  38              		.cfi_offset 14, -4
+  39 0002 97B0     		sub	sp, sp, #92
+  40              	.LCFI1:
+  41              		.cfi_def_cfa_offset 96
+  42              		.loc 1 64 22 view .LVU3
+  43 0004 3422     		movs	r2, #52
+  44 0006 0021     		movs	r1, #0
+  45 0008 09A8     		add	r0, sp, #36
+  46 000a FFF7FEFF 		bl	memset
+  47              	.LVL0:
+  65:USB_Device/App/usb_device.c ****   RCC_CRSInitTypeDef RCC_CRSInitStruct= {0};
+  48              		.loc 1 65 3 is_stmt 1 view .LVU4
+  49              		.loc 1 65 22 is_stmt 0 view .LVU5
+ARM GAS  /tmp/ccCXqSI0.s 			page 3
+
+
+  50 000e 1822     		movs	r2, #24
+  51 0010 0021     		movs	r1, #0
+  52 0012 02A8     		add	r0, sp, #8
+  53 0014 FFF7FEFF 		bl	memset
+  54              	.LVL1:
+  66:USB_Device/App/usb_device.c **** 
+  67:USB_Device/App/usb_device.c ****   /* Enable HSI48 */
+  68:USB_Device/App/usb_device.c ****   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48;
+  55              		.loc 1 68 3 is_stmt 1 view .LVU6
+  56              		.loc 1 68 36 is_stmt 0 view .LVU7
+  57 0018 2023     		movs	r3, #32
+  58 001a 0893     		str	r3, [sp, #32]
+  69:USB_Device/App/usb_device.c ****   RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
+  59              		.loc 1 69 3 is_stmt 1 view .LVU8
+  70:USB_Device/App/usb_device.c ****   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  71:USB_Device/App/usb_device.c ****   if (HAL_RCC_OscConfig(&RCC_OscInitStruct)!= HAL_OK)
+  60              		.loc 1 71 7 is_stmt 0 view .LVU9
+  61 001c 08A8     		add	r0, sp, #32
+  69:USB_Device/App/usb_device.c ****   RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
+  62              		.loc 1 69 32 view .LVU10
+  63 001e 0123     		movs	r3, #1
+  64 0020 0E93     		str	r3, [sp, #56]
+  70:USB_Device/App/usb_device.c ****   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  65              		.loc 1 70 3 is_stmt 1 view .LVU11
+  66              		.loc 1 71 3 view .LVU12
+  67              		.loc 1 71 7 is_stmt 0 view .LVU13
+  68 0022 FFF7FEFF 		bl	HAL_RCC_OscConfig
+  69              	.LVL2:
+  70              		.loc 1 71 6 view .LVU14
+  71 0026 08B1     		cbz	r0, .L2
+  72:USB_Device/App/usb_device.c ****   {
+  73:USB_Device/App/usb_device.c ****     Error_Handler();
+  72              		.loc 1 73 5 is_stmt 1 view .LVU15
+  73 0028 FFF7FEFF 		bl	Error_Handler
+  74              	.LVL3:
+  75              	.L2:
+  74:USB_Device/App/usb_device.c ****   }
+  75:USB_Device/App/usb_device.c ****   /*Configure the clock recovery system (CRS)**********************************/
+  76:USB_Device/App/usb_device.c **** 
+  77:USB_Device/App/usb_device.c ****   /*Enable CRS Clock*/
+  78:USB_Device/App/usb_device.c ****   __HAL_RCC_CRS_CLK_ENABLE();
+  76              		.loc 1 78 3 view .LVU16
+  77              	.LBB2:
+  78              		.loc 1 78 3 view .LVU17
+  79              		.loc 1 78 3 view .LVU18
+  80 002c 0D4B     		ldr	r3, .L6
+  81 002e 9A6D     		ldr	r2, [r3, #88]
+  82 0030 42F48072 		orr	r2, r2, #256
+  83 0034 9A65     		str	r2, [r3, #88]
+  84              		.loc 1 78 3 view .LVU19
+  85 0036 9B6D     		ldr	r3, [r3, #88]
+  86 0038 03F48073 		and	r3, r3, #256
+  87 003c 0193     		str	r3, [sp, #4]
+  88              		.loc 1 78 3 view .LVU20
+  89 003e 019B     		ldr	r3, [sp, #4]
+  90              	.LBE2:
+  91              		.loc 1 78 3 view .LVU21
+ARM GAS  /tmp/ccCXqSI0.s 			page 4
+
+
+  79:USB_Device/App/usb_device.c **** 
+  80:USB_Device/App/usb_device.c ****   /* Default Synchro Signal division factor (not divided) */
+  81:USB_Device/App/usb_device.c ****   RCC_CRSInitStruct.Prescaler = RCC_CRS_SYNC_DIV1;
+  92              		.loc 1 81 3 view .LVU22
+  82:USB_Device/App/usb_device.c **** 
+  83:USB_Device/App/usb_device.c ****   /* Set the SYNCSRC[1:0] bits according to CRS_Source value */
+  84:USB_Device/App/usb_device.c ****   RCC_CRSInitStruct.Source = RCC_CRS_SYNC_SOURCE_USB;
+  93              		.loc 1 84 28 is_stmt 0 view .LVU23
+  94 0040 0022     		movs	r2, #0
+  95 0042 4FF00053 		mov	r3, #536870912
+  96 0046 CDE90223 		strd	r2, r3, [sp, #8]
+  85:USB_Device/App/usb_device.c **** 
+  86:USB_Device/App/usb_device.c ****   /* HSI48 is synchronized with USB SOF at 1KHz rate */
+  87:USB_Device/App/usb_device.c ****   RCC_CRSInitStruct.ReloadValue =  __HAL_RCC_CRS_RELOADVALUE_CALCULATE(48000000, 1000);
+  97              		.loc 1 87 3 is_stmt 1 view .LVU24
+  88:USB_Device/App/usb_device.c ****   RCC_CRSInitStruct.ErrorLimitValue = RCC_CRS_ERRORLIMIT_DEFAULT;
+  98              		.loc 1 88 37 is_stmt 0 view .LVU25
+  99 004a 4BF67F31 		movw	r1, #47999
+ 100 004e 2223     		movs	r3, #34
+ 101 0050 CDE90513 		strd	r1, r3, [sp, #20]
+  89:USB_Device/App/usb_device.c **** 
+  90:USB_Device/App/usb_device.c ****   /* Set the TRIM[5:0] to the default value */
+  91:USB_Device/App/usb_device.c ****   RCC_CRSInitStruct.HSI48CalibrationValue = RCC_CRS_HSI48CALIBRATION_DEFAULT;
+ 102              		.loc 1 91 3 is_stmt 1 view .LVU26
+  92:USB_Device/App/usb_device.c **** 
+  93:USB_Device/App/usb_device.c ****   /* Start automatic synchronization */
+  94:USB_Device/App/usb_device.c ****   HAL_RCCEx_CRSConfig (&RCC_CRSInitStruct);
+ 103              		.loc 1 94 3 is_stmt 0 view .LVU27
+ 104 0054 02A8     		add	r0, sp, #8
+  91:USB_Device/App/usb_device.c **** 
+ 105              		.loc 1 91 43 view .LVU28
+ 106 0056 2023     		movs	r3, #32
+ 107 0058 0793     		str	r3, [sp, #28]
+ 108              		.loc 1 94 3 is_stmt 1 view .LVU29
+ 109 005a FFF7FEFF 		bl	HAL_RCCEx_CRSConfig
+ 110              	.LVL4:
+  95:USB_Device/App/usb_device.c **** }
+ 111              		.loc 1 95 1 is_stmt 0 view .LVU30
+ 112 005e 17B0     		add	sp, sp, #92
+ 113              	.LCFI2:
+ 114              		.cfi_def_cfa_offset 4
+ 115              		@ sp needed
+ 116 0060 5DF804FB 		ldr	pc, [sp], #4
+ 117              	.L7:
+ 118              		.align	2
+ 119              	.L6:
+ 120 0064 00100240 		.word	1073876992
+ 121              		.cfi_endproc
+ 122              	.LFE360:
+ 124              		.section	.text.MX_USB_Device_Init,"ax",%progbits
+ 125              		.align	1
+ 126              		.global	MX_USB_Device_Init
+ 127              		.syntax unified
+ 128              		.thumb
+ 129              		.thumb_func
+ 130              		.fpu fpv4-sp-d16
+ 132              	MX_USB_Device_Init:
+ARM GAS  /tmp/ccCXqSI0.s 			page 5
+
+
+ 133              	.LFB361:
+  96:USB_Device/App/usb_device.c **** 
+  97:USB_Device/App/usb_device.c **** /* USER CODE END 0 */
+  98:USB_Device/App/usb_device.c **** 
+  99:USB_Device/App/usb_device.c **** /*
+ 100:USB_Device/App/usb_device.c ****  * -- Insert your external function declaration here --
+ 101:USB_Device/App/usb_device.c ****  */
+ 102:USB_Device/App/usb_device.c **** /* USER CODE BEGIN 1 */
+ 103:USB_Device/App/usb_device.c **** 
+ 104:USB_Device/App/usb_device.c **** /* USER CODE END 1 */
+ 105:USB_Device/App/usb_device.c **** 
+ 106:USB_Device/App/usb_device.c **** /**
+ 107:USB_Device/App/usb_device.c ****   * Init USB device Library, add supported class and start the library
+ 108:USB_Device/App/usb_device.c ****   * @retval None
+ 109:USB_Device/App/usb_device.c ****   */
+ 110:USB_Device/App/usb_device.c **** void MX_USB_Device_Init(void)
+ 111:USB_Device/App/usb_device.c **** {
+ 134              		.loc 1 111 1 is_stmt 1 view -0
+ 135              		.cfi_startproc
+ 136              		@ args = 0, pretend = 0, frame = 0
+ 137              		@ frame_needed = 0, uses_anonymous_args = 0
+ 112:USB_Device/App/usb_device.c ****   /* USER CODE BEGIN USB_Device_Init_PreTreatment */
+ 113:USB_Device/App/usb_device.c **** 
+ 114:USB_Device/App/usb_device.c ****   /* USB Clock Initialization */
+ 115:USB_Device/App/usb_device.c ****    USBD_Clock_Config();
+ 138              		.loc 1 115 4 view .LVU32
+ 111:USB_Device/App/usb_device.c ****   /* USER CODE BEGIN USB_Device_Init_PreTreatment */
+ 139              		.loc 1 111 1 is_stmt 0 view .LVU33
+ 140 0000 08B5     		push	{r3, lr}
+ 141              	.LCFI3:
+ 142              		.cfi_def_cfa_offset 8
+ 143              		.cfi_offset 3, -8
+ 144              		.cfi_offset 14, -4
+ 145              		.loc 1 115 4 view .LVU34
+ 146 0002 FFF7FEFF 		bl	USBD_Clock_Config
+ 147              	.LVL5:
+ 116:USB_Device/App/usb_device.c **** 
+ 117:USB_Device/App/usb_device.c ****   /* USER CODE END USB_Device_Init_PreTreatment */
+ 118:USB_Device/App/usb_device.c **** 
+ 119:USB_Device/App/usb_device.c ****   /* Init Device Library, add supported class and start the library. */
+ 120:USB_Device/App/usb_device.c ****   if (USBD_Init(&hUsbDeviceFS, &CDC_Desc, DEVICE_FS) != USBD_OK) {
+ 148              		.loc 1 120 3 is_stmt 1 view .LVU35
+ 149              		.loc 1 120 7 is_stmt 0 view .LVU36
+ 150 0006 0F49     		ldr	r1, .L22
+ 151 0008 0F48     		ldr	r0, .L22+4
+ 152 000a 0022     		movs	r2, #0
+ 153 000c FFF7FEFF 		bl	USBD_Init
+ 154              	.LVL6:
+ 155              		.loc 1 120 6 view .LVU37
+ 156 0010 08B1     		cbz	r0, .L9
+ 121:USB_Device/App/usb_device.c ****     Error_Handler();
+ 157              		.loc 1 121 5 is_stmt 1 view .LVU38
+ 158 0012 FFF7FEFF 		bl	Error_Handler
+ 159              	.LVL7:
+ 160              	.L9:
+ 122:USB_Device/App/usb_device.c ****   }
+ 123:USB_Device/App/usb_device.c ****   if (USBD_RegisterClass(&hUsbDeviceFS, &USBD_CDC) != USBD_OK) {
+ARM GAS  /tmp/ccCXqSI0.s 			page 6
+
+
+ 161              		.loc 1 123 3 view .LVU39
+ 162              		.loc 1 123 7 is_stmt 0 view .LVU40
+ 163 0016 0D49     		ldr	r1, .L22+8
+ 164 0018 0B48     		ldr	r0, .L22+4
+ 165 001a FFF7FEFF 		bl	USBD_RegisterClass
+ 166              	.LVL8:
+ 167              		.loc 1 123 6 view .LVU41
+ 168 001e 08B1     		cbz	r0, .L10
+ 124:USB_Device/App/usb_device.c ****     Error_Handler();
+ 169              		.loc 1 124 5 is_stmt 1 view .LVU42
+ 170 0020 FFF7FEFF 		bl	Error_Handler
+ 171              	.LVL9:
+ 172              	.L10:
+ 125:USB_Device/App/usb_device.c ****   }
+ 126:USB_Device/App/usb_device.c ****   if (USBD_CDC_RegisterInterface(&hUsbDeviceFS, &USBD_Interface_fops_FS) != USBD_OK) {
+ 173              		.loc 1 126 3 view .LVU43
+ 174              		.loc 1 126 7 is_stmt 0 view .LVU44
+ 175 0024 0A49     		ldr	r1, .L22+12
+ 176 0026 0848     		ldr	r0, .L22+4
+ 177 0028 FFF7FEFF 		bl	USBD_CDC_RegisterInterface
+ 178              	.LVL10:
+ 179              		.loc 1 126 6 view .LVU45
+ 180 002c 08B1     		cbz	r0, .L11
+ 127:USB_Device/App/usb_device.c ****     Error_Handler();
+ 181              		.loc 1 127 5 is_stmt 1 view .LVU46
+ 182 002e FFF7FEFF 		bl	Error_Handler
+ 183              	.LVL11:
+ 184              	.L11:
+ 128:USB_Device/App/usb_device.c ****   }
+ 129:USB_Device/App/usb_device.c ****   if (USBD_Start(&hUsbDeviceFS) != USBD_OK) {
+ 185              		.loc 1 129 3 view .LVU47
+ 186              		.loc 1 129 7 is_stmt 0 view .LVU48
+ 187 0032 0548     		ldr	r0, .L22+4
+ 188 0034 FFF7FEFF 		bl	USBD_Start
+ 189              	.LVL12:
+ 190              		.loc 1 129 6 view .LVU49
+ 191 0038 18B1     		cbz	r0, .L8
+ 130:USB_Device/App/usb_device.c ****     Error_Handler();
+ 192              		.loc 1 130 5 is_stmt 1 view .LVU50
+ 131:USB_Device/App/usb_device.c ****   }
+ 132:USB_Device/App/usb_device.c ****   /* USER CODE BEGIN USB_Device_Init_PostTreatment */
+ 133:USB_Device/App/usb_device.c **** 
+ 134:USB_Device/App/usb_device.c ****   /* USER CODE END USB_Device_Init_PostTreatment */
+ 135:USB_Device/App/usb_device.c **** }
+ 193              		.loc 1 135 1 is_stmt 0 view .LVU51
+ 194 003a BDE80840 		pop	{r3, lr}
+ 195              	.LCFI4:
+ 196              		.cfi_remember_state
+ 197              		.cfi_restore 14
+ 198              		.cfi_restore 3
+ 199              		.cfi_def_cfa_offset 0
+ 130:USB_Device/App/usb_device.c ****     Error_Handler();
+ 200              		.loc 1 130 5 view .LVU52
+ 201 003e FFF7FEBF 		b	Error_Handler
+ 202              	.LVL13:
+ 203              	.L8:
+ 204              	.LCFI5:
+ARM GAS  /tmp/ccCXqSI0.s 			page 7
+
+
+ 205              		.cfi_restore_state
+ 206              		.loc 1 135 1 view .LVU53
+ 207 0042 08BD     		pop	{r3, pc}
+ 208              	.L23:
+ 209              		.align	2
+ 210              	.L22:
+ 211 0044 00000000 		.word	CDC_Desc
+ 212 0048 00000000 		.word	hUsbDeviceFS
+ 213 004c 00000000 		.word	USBD_CDC
+ 214 0050 00000000 		.word	USBD_Interface_fops_FS
+ 215              		.cfi_endproc
+ 216              	.LFE361:
+ 218              		.comm	hUsbDeviceFS,708,4
+ 219              		.comm	HID_Buffer,4,1
+ 220              		.global	remotewakeupon
+ 221              		.section	.bss.remotewakeupon,"aw",%nobits
+ 222              		.align	2
+ 225              	remotewakeupon:
+ 226 0000 00000000 		.space	4
+ 227              		.text
+ 228              	.Letext0:
+ 229              		.file 2 "/usr/lib/gcc/arm-none-eabi/9.2.1/include/stdint.h"
+ 230              		.file 3 "Drivers/CMSIS/Include/core_cm4.h"
+ 231              		.file 4 "Drivers/CMSIS/Device/ST/STM32G4xx/Include/system_stm32g4xx.h"
+ 232              		.file 5 "Drivers/CMSIS/Device/ST/STM32G4xx/Include/stm32g474xx.h"
+ 233              		.file 6 "Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_def.h"
+ 234              		.file 7 "Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_rcc.h"
+ 235              		.file 8 "Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_rcc_ex.h"
+ 236              		.file 9 "Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_flash.h"
+ 237              		.file 10 "Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_usb.h"
+ 238              		.file 11 "Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_pcd.h"
+ 239              		.file 12 "Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal.h"
+ 240              		.file 13 "/usr/lib/gcc/arm-none-eabi/9.2.1/include/stddef.h"
+ 241              		.file 14 "/usr/include/newlib/sys/_types.h"
+ 242              		.file 15 "/usr/include/newlib/sys/reent.h"
+ 243              		.file 16 "/usr/include/newlib/sys/lock.h"
+ 244              		.file 17 "/usr/include/newlib/stdlib.h"
+ 245              		.file 18 "Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h"
+ 246              		.file 19 "USB_Device/App/usbd_desc.h"
+ 247              		.file 20 "Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc/usbd_cdc.h"
+ 248              		.file 21 "USB_Device/App/usbd_cdc_if.h"
+ 249              		.file 22 "Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h"
+ 250              		.file 23 "<built-in>"
+ARM GAS  /tmp/ccCXqSI0.s 			page 8
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 usb_device.c
+     /tmp/ccCXqSI0.s:18     .text.USBD_Clock_Config:0000000000000000 $t
+     /tmp/ccCXqSI0.s:26     .text.USBD_Clock_Config:0000000000000000 USBD_Clock_Config
+     /tmp/ccCXqSI0.s:120    .text.USBD_Clock_Config:0000000000000064 $d
+     /tmp/ccCXqSI0.s:125    .text.MX_USB_Device_Init:0000000000000000 $t
+     /tmp/ccCXqSI0.s:132    .text.MX_USB_Device_Init:0000000000000000 MX_USB_Device_Init
+     /tmp/ccCXqSI0.s:211    .text.MX_USB_Device_Init:0000000000000044 $d
+                            *COM*:00000000000002c4 hUsbDeviceFS
+                            *COM*:0000000000000004 HID_Buffer
+     /tmp/ccCXqSI0.s:225    .bss.remotewakeupon:0000000000000000 remotewakeupon
+     /tmp/ccCXqSI0.s:222    .bss.remotewakeupon:0000000000000000 $d
+
+UNDEFINED SYMBOLS
+memset
+HAL_RCC_OscConfig
+Error_Handler
+HAL_RCCEx_CRSConfig
+USBD_Init
+USBD_RegisterClass
+USBD_CDC_RegisterInterface
+USBD_Start
+CDC_Desc
+USBD_CDC
+USBD_Interface_fops_FS

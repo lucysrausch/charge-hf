@@ -1,0 +1,1318 @@
+ARM GAS  /tmp/ccsdcRxX.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"error.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.SCPI_ErrorEmit,"ax",%progbits
+  18              		.align	1
+  19              		.arch armv7e-m
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	SCPI_ErrorEmit:
+  26              	.LVL0:
+  27              	.LFB2:
+  28              		.file 1 "libscpi/src/error.c"
+   1:libscpi/src/error.c **** /*-
+   2:libscpi/src/error.c ****  * BSD 2-Clause License
+   3:libscpi/src/error.c ****  *
+   4:libscpi/src/error.c ****  * Copyright (c) 2012-2018, Jan Breuer
+   5:libscpi/src/error.c ****  * All rights reserved.
+   6:libscpi/src/error.c ****  *
+   7:libscpi/src/error.c ****  * Redistribution and use in source and binary forms, with or without
+   8:libscpi/src/error.c ****  * modification, are permitted provided that the following conditions are met:
+   9:libscpi/src/error.c ****  *
+  10:libscpi/src/error.c ****  * * Redistributions of source code must retain the above copyright notice, this
+  11:libscpi/src/error.c ****  *   list of conditions and the following disclaimer.
+  12:libscpi/src/error.c ****  *
+  13:libscpi/src/error.c ****  * * Redistributions in binary form must reproduce the above copyright notice,
+  14:libscpi/src/error.c ****  *   this list of conditions and the following disclaimer in the documentation
+  15:libscpi/src/error.c ****  *   and/or other materials provided with the distribution.
+  16:libscpi/src/error.c ****  *
+  17:libscpi/src/error.c ****  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  18:libscpi/src/error.c ****  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  19:libscpi/src/error.c ****  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+  20:libscpi/src/error.c ****  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+  21:libscpi/src/error.c ****  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  22:libscpi/src/error.c ****  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  23:libscpi/src/error.c ****  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+  24:libscpi/src/error.c ****  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  25:libscpi/src/error.c ****  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  26:libscpi/src/error.c ****  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  27:libscpi/src/error.c ****  */
+  28:libscpi/src/error.c **** /**
+  29:libscpi/src/error.c ****  * @file   scpi_error.c
+  30:libscpi/src/error.c ****  * @date   Thu Nov 15 10:58:45 UTC 2012
+ARM GAS  /tmp/ccsdcRxX.s 			page 2
+
+
+  31:libscpi/src/error.c ****  *
+  32:libscpi/src/error.c ****  * @brief  Error handling and storing routines
+  33:libscpi/src/error.c ****  *
+  34:libscpi/src/error.c ****  *
+  35:libscpi/src/error.c ****  */
+  36:libscpi/src/error.c **** 
+  37:libscpi/src/error.c **** #include <stdint.h>
+  38:libscpi/src/error.c **** 
+  39:libscpi/src/error.c **** #include "scpi/parser.h"
+  40:libscpi/src/error.c **** #include "scpi/ieee488.h"
+  41:libscpi/src/error.c **** #include "scpi/error.h"
+  42:libscpi/src/error.c **** #include "fifo_private.h"
+  43:libscpi/src/error.c **** #include "scpi/constants.h"
+  44:libscpi/src/error.c **** 
+  45:libscpi/src/error.c **** #if USE_DEVICE_DEPENDENT_ERROR_INFORMATION
+  46:libscpi/src/error.c **** #define SCPI_ERROR_SETVAL(e, c, i) do { (e)->error_code = (c); (e)->device_dependent_info = (i); } 
+  47:libscpi/src/error.c **** #else
+  48:libscpi/src/error.c **** #define SCPI_ERROR_SETVAL(e, c, i) do { (e)->error_code = (c); (void)(i);} while(0)
+  49:libscpi/src/error.c **** #endif
+  50:libscpi/src/error.c **** 
+  51:libscpi/src/error.c **** /**
+  52:libscpi/src/error.c ****  * Initialize error queue
+  53:libscpi/src/error.c ****  * @param context - scpi context
+  54:libscpi/src/error.c ****  */
+  55:libscpi/src/error.c **** void SCPI_ErrorInit(scpi_t * context, scpi_error_t * data, int16_t size) {
+  56:libscpi/src/error.c ****     fifo_init(&context->error_queue, data, size);
+  57:libscpi/src/error.c **** }
+  58:libscpi/src/error.c **** 
+  59:libscpi/src/error.c **** /**
+  60:libscpi/src/error.c ****  * Emit no error
+  61:libscpi/src/error.c ****  * @param context scpi context
+  62:libscpi/src/error.c ****  */
+  63:libscpi/src/error.c **** static void SCPI_ErrorEmitEmpty(scpi_t * context) {
+  64:libscpi/src/error.c ****     if ((SCPI_ErrorCount(context) == 0) && (SCPI_RegGet(context, SCPI_REG_STB) & STB_QMA)) {
+  65:libscpi/src/error.c ****         SCPI_RegClearBits(context, SCPI_REG_STB, STB_QMA);
+  66:libscpi/src/error.c **** 
+  67:libscpi/src/error.c ****         if (context->interface && context->interface->error) {
+  68:libscpi/src/error.c ****             context->interface->error(context, 0);
+  69:libscpi/src/error.c ****         }
+  70:libscpi/src/error.c ****     }
+  71:libscpi/src/error.c **** }
+  72:libscpi/src/error.c **** 
+  73:libscpi/src/error.c **** /**
+  74:libscpi/src/error.c ****  * Emit error
+  75:libscpi/src/error.c ****  * @param context scpi context
+  76:libscpi/src/error.c ****  * @param err Error to emit
+  77:libscpi/src/error.c ****  */
+  78:libscpi/src/error.c **** static void SCPI_ErrorEmit(scpi_t * context, int16_t err) {
+  29              		.loc 1 78 59 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  79:libscpi/src/error.c ****     SCPI_RegSetBits(context, SCPI_REG_STB, STB_QMA);
+  33              		.loc 1 79 5 view .LVU1
+  78:libscpi/src/error.c ****     SCPI_RegSetBits(context, SCPI_REG_STB, STB_QMA);
+  34              		.loc 1 78 59 is_stmt 0 view .LVU2
+  35 0000 70B5     		push	{r4, r5, r6, lr}
+ARM GAS  /tmp/ccsdcRxX.s 			page 3
+
+
+  36              	.LCFI0:
+  37              		.cfi_def_cfa_offset 16
+  38              		.cfi_offset 4, -16
+  39              		.cfi_offset 5, -12
+  40              		.cfi_offset 6, -8
+  41              		.cfi_offset 14, -4
+  78:libscpi/src/error.c ****     SCPI_RegSetBits(context, SCPI_REG_STB, STB_QMA);
+  42              		.loc 1 78 59 view .LVU3
+  43 0002 0446     		mov	r4, r0
+  44 0004 0D46     		mov	r5, r1
+  45              		.loc 1 79 5 view .LVU4
+  46 0006 0422     		movs	r2, #4
+  47 0008 0021     		movs	r1, #0
+  48              	.LVL1:
+  49              		.loc 1 79 5 view .LVU5
+  50 000a FFF7FEFF 		bl	SCPI_RegSetBits
+  51              	.LVL2:
+  80:libscpi/src/error.c **** 
+  81:libscpi/src/error.c ****     if (context->interface && context->interface->error) {
+  52              		.loc 1 81 5 is_stmt 1 view .LVU6
+  53              		.loc 1 81 16 is_stmt 0 view .LVU7
+  54 000e E36A     		ldr	r3, [r4, #44]
+  55              		.loc 1 81 8 view .LVU8
+  56 0010 33B1     		cbz	r3, .L1
+  57              		.loc 1 81 49 discriminator 1 view .LVU9
+  58 0012 1B68     		ldr	r3, [r3]
+  59              		.loc 1 81 28 discriminator 1 view .LVU10
+  60 0014 23B1     		cbz	r3, .L1
+  82:libscpi/src/error.c ****         context->interface->error(context, err);
+  61              		.loc 1 82 9 is_stmt 1 view .LVU11
+  62 0016 2946     		mov	r1, r5
+  63 0018 2046     		mov	r0, r4
+  83:libscpi/src/error.c ****     }
+  84:libscpi/src/error.c **** }
+  64              		.loc 1 84 1 is_stmt 0 view .LVU12
+  65 001a BDE87040 		pop	{r4, r5, r6, lr}
+  66              	.LCFI1:
+  67              		.cfi_remember_state
+  68              		.cfi_restore 14
+  69              		.cfi_restore 6
+  70              		.cfi_restore 5
+  71              		.cfi_restore 4
+  72              		.cfi_def_cfa_offset 0
+  73              	.LVL3:
+  82:libscpi/src/error.c ****         context->interface->error(context, err);
+  74              		.loc 1 82 9 view .LVU13
+  75 001e 1847     		bx	r3
+  76              	.LVL4:
+  77              	.L1:
+  78              	.LCFI2:
+  79              		.cfi_restore_state
+  80              		.loc 1 84 1 view .LVU14
+  81 0020 70BD     		pop	{r4, r5, r6, pc}
+  82              		.loc 1 84 1 view .LVU15
+  83              		.cfi_endproc
+  84              	.LFE2:
+  86              		.section	.text.SCPI_ErrorInit,"ax",%progbits
+ARM GAS  /tmp/ccsdcRxX.s 			page 4
+
+
+  87              		.align	1
+  88              		.global	SCPI_ErrorInit
+  89              		.syntax unified
+  90              		.thumb
+  91              		.thumb_func
+  92              		.fpu fpv4-sp-d16
+  94              	SCPI_ErrorInit:
+  95              	.LVL5:
+  96              	.LFB0:
+  55:libscpi/src/error.c ****     fifo_init(&context->error_queue, data, size);
+  97              		.loc 1 55 74 is_stmt 1 view -0
+  98              		.cfi_startproc
+  99              		@ args = 0, pretend = 0, frame = 0
+ 100              		@ frame_needed = 0, uses_anonymous_args = 0
+ 101              		@ link register save eliminated.
+  56:libscpi/src/error.c **** }
+ 102              		.loc 1 56 5 view .LVU17
+ 103 0000 3C30     		adds	r0, r0, #60
+ 104              	.LVL6:
+  56:libscpi/src/error.c **** }
+ 105              		.loc 1 56 5 is_stmt 0 view .LVU18
+ 106 0002 FFF7FEBF 		b	fifo_init
+ 107              	.LVL7:
+  56:libscpi/src/error.c **** }
+ 108              		.loc 1 56 5 view .LVU19
+ 109              		.cfi_endproc
+ 110              	.LFE0:
+ 112              		.section	.text.SCPI_ErrorCount,"ax",%progbits
+ 113              		.align	1
+ 114              		.global	SCPI_ErrorCount
+ 115              		.syntax unified
+ 116              		.thumb
+ 117              		.thumb_func
+ 118              		.fpu fpv4-sp-d16
+ 120              	SCPI_ErrorCount:
+ 121              	.LVL8:
+ 122              	.LFB5:
+  85:libscpi/src/error.c **** 
+  86:libscpi/src/error.c **** /**
+  87:libscpi/src/error.c ****  * Clear error queue
+  88:libscpi/src/error.c ****  * @param context - scpi context
+  89:libscpi/src/error.c ****  */
+  90:libscpi/src/error.c **** void SCPI_ErrorClear(scpi_t * context) {
+  91:libscpi/src/error.c **** #if USE_DEVICE_DEPENDENT_ERROR_INFORMATION
+  92:libscpi/src/error.c ****     scpi_error_t error;
+  93:libscpi/src/error.c ****     while (fifo_remove(&context->error_queue, &error)) {
+  94:libscpi/src/error.c ****         SCPIDEFINE_free(&context->error_info_heap, error.device_dependent_info, false);
+  95:libscpi/src/error.c ****     }
+  96:libscpi/src/error.c **** #endif
+  97:libscpi/src/error.c ****     fifo_clear(&context->error_queue);
+  98:libscpi/src/error.c **** 
+  99:libscpi/src/error.c ****     SCPI_ErrorEmitEmpty(context);
+ 100:libscpi/src/error.c **** }
+ 101:libscpi/src/error.c **** 
+ 102:libscpi/src/error.c **** /**
+ 103:libscpi/src/error.c ****  * Pop error from queue
+ 104:libscpi/src/error.c ****  * @param context - scpi context
+ARM GAS  /tmp/ccsdcRxX.s 			page 5
+
+
+ 105:libscpi/src/error.c ****  * @param error
+ 106:libscpi/src/error.c ****  * @return
+ 107:libscpi/src/error.c ****  */
+ 108:libscpi/src/error.c **** scpi_bool_t SCPI_ErrorPop(scpi_t * context, scpi_error_t * error) {
+ 109:libscpi/src/error.c ****     if (!error || !context) return FALSE;
+ 110:libscpi/src/error.c ****     SCPI_ERROR_SETVAL(error, 0, NULL);
+ 111:libscpi/src/error.c ****     fifo_remove(&context->error_queue, error);
+ 112:libscpi/src/error.c **** 
+ 113:libscpi/src/error.c ****     SCPI_ErrorEmitEmpty(context);
+ 114:libscpi/src/error.c **** 
+ 115:libscpi/src/error.c ****     return TRUE;
+ 116:libscpi/src/error.c **** }
+ 117:libscpi/src/error.c **** 
+ 118:libscpi/src/error.c **** /**
+ 119:libscpi/src/error.c ****  * Return number of errors/events in the queue
+ 120:libscpi/src/error.c ****  * @param context
+ 121:libscpi/src/error.c ****  * @return
+ 122:libscpi/src/error.c ****  */
+ 123:libscpi/src/error.c **** int32_t SCPI_ErrorCount(scpi_t * context) {
+ 123              		.loc 1 123 43 is_stmt 1 view -0
+ 124              		.cfi_startproc
+ 125              		@ args = 0, pretend = 0, frame = 8
+ 126              		@ frame_needed = 0, uses_anonymous_args = 0
+ 124:libscpi/src/error.c ****     int16_t result = 0;
+ 127              		.loc 1 124 5 view .LVU21
+ 123:libscpi/src/error.c ****     int16_t result = 0;
+ 128              		.loc 1 123 43 is_stmt 0 view .LVU22
+ 129 0000 07B5     		push	{r0, r1, r2, lr}
+ 130              	.LCFI3:
+ 131              		.cfi_def_cfa_offset 16
+ 132              		.cfi_offset 14, -4
+ 133              		.loc 1 124 13 view .LVU23
+ 134 0002 0023     		movs	r3, #0
+ 125:libscpi/src/error.c **** 
+ 126:libscpi/src/error.c ****     fifo_count(&context->error_queue, &result);
+ 135              		.loc 1 126 5 view .LVU24
+ 136 0004 0DF10601 		add	r1, sp, #6
+ 137 0008 3C30     		adds	r0, r0, #60
+ 138              	.LVL9:
+ 124:libscpi/src/error.c **** 
+ 139              		.loc 1 124 13 view .LVU25
+ 140 000a ADF80630 		strh	r3, [sp, #6]	@ movhi
+ 141              		.loc 1 126 5 is_stmt 1 view .LVU26
+ 142 000e FFF7FEFF 		bl	fifo_count
+ 143              	.LVL10:
+ 127:libscpi/src/error.c **** 
+ 128:libscpi/src/error.c ****     return result;
+ 144              		.loc 1 128 5 view .LVU27
+ 129:libscpi/src/error.c **** }
+ 145              		.loc 1 129 1 is_stmt 0 view .LVU28
+ 146 0012 BDF90600 		ldrsh	r0, [sp, #6]
+ 147 0016 03B0     		add	sp, sp, #12
+ 148              	.LCFI4:
+ 149              		.cfi_def_cfa_offset 4
+ 150              		@ sp needed
+ 151 0018 5DF804FB 		ldr	pc, [sp], #4
+ 152              		.cfi_endproc
+ARM GAS  /tmp/ccsdcRxX.s 			page 6
+
+
+ 153              	.LFE5:
+ 155              		.section	.text.SCPI_ErrorEmitEmpty,"ax",%progbits
+ 156              		.align	1
+ 157              		.syntax unified
+ 158              		.thumb
+ 159              		.thumb_func
+ 160              		.fpu fpv4-sp-d16
+ 162              	SCPI_ErrorEmitEmpty:
+ 163              	.LVL11:
+ 164              	.LFB1:
+  63:libscpi/src/error.c ****     if ((SCPI_ErrorCount(context) == 0) && (SCPI_RegGet(context, SCPI_REG_STB) & STB_QMA)) {
+ 165              		.loc 1 63 51 is_stmt 1 view -0
+ 166              		.cfi_startproc
+ 167              		@ args = 0, pretend = 0, frame = 8
+ 168              		@ frame_needed = 0, uses_anonymous_args = 0
+  64:libscpi/src/error.c ****         SCPI_RegClearBits(context, SCPI_REG_STB, STB_QMA);
+ 169              		.loc 1 64 5 view .LVU30
+  63:libscpi/src/error.c ****     if ((SCPI_ErrorCount(context) == 0) && (SCPI_RegGet(context, SCPI_REG_STB) & STB_QMA)) {
+ 170              		.loc 1 63 51 is_stmt 0 view .LVU31
+ 171 0000 13B5     		push	{r0, r1, r4, lr}
+ 172              	.LCFI5:
+ 173              		.cfi_def_cfa_offset 16
+ 174              		.cfi_offset 4, -8
+ 175              		.cfi_offset 14, -4
+  63:libscpi/src/error.c ****     if ((SCPI_ErrorCount(context) == 0) && (SCPI_RegGet(context, SCPI_REG_STB) & STB_QMA)) {
+ 176              		.loc 1 63 51 view .LVU32
+ 177 0002 0446     		mov	r4, r0
+  64:libscpi/src/error.c ****         SCPI_RegClearBits(context, SCPI_REG_STB, STB_QMA);
+ 178              		.loc 1 64 10 view .LVU33
+ 179 0004 FFF7FEFF 		bl	SCPI_ErrorCount
+ 180              	.LVL12:
+  64:libscpi/src/error.c ****         SCPI_RegClearBits(context, SCPI_REG_STB, STB_QMA);
+ 181              		.loc 1 64 8 view .LVU34
+ 182 0008 0146     		mov	r1, r0
+ 183 000a A8B9     		cbnz	r0, .L11
+  64:libscpi/src/error.c ****         SCPI_RegClearBits(context, SCPI_REG_STB, STB_QMA);
+ 184              		.loc 1 64 45 discriminator 1 view .LVU35
+ 185 000c 0190     		str	r0, [sp, #4]
+ 186 000e 2046     		mov	r0, r4
+ 187 0010 FFF7FEFF 		bl	SCPI_RegGet
+ 188              	.LVL13:
+  64:libscpi/src/error.c ****         SCPI_RegClearBits(context, SCPI_REG_STB, STB_QMA);
+ 189              		.loc 1 64 41 discriminator 1 view .LVU36
+ 190 0014 10F0040F 		tst	r0, #4
+ 191 0018 0199     		ldr	r1, [sp, #4]
+ 192 001a 0DD0     		beq	.L11
+ 193              	.LVL14:
+ 194              	.LBB4:
+ 195              	.LBI4:
+  63:libscpi/src/error.c ****     if ((SCPI_ErrorCount(context) == 0) && (SCPI_RegGet(context, SCPI_REG_STB) & STB_QMA)) {
+ 196              		.loc 1 63 13 is_stmt 1 view .LVU37
+ 197              	.LBB5:
+  65:libscpi/src/error.c **** 
+ 198              		.loc 1 65 9 view .LVU38
+ 199 001c 0422     		movs	r2, #4
+ 200 001e 2046     		mov	r0, r4
+ 201 0020 FFF7FEFF 		bl	SCPI_RegClearBits
+ARM GAS  /tmp/ccsdcRxX.s 			page 7
+
+
+ 202              	.LVL15:
+  67:libscpi/src/error.c ****             context->interface->error(context, 0);
+ 203              		.loc 1 67 9 view .LVU39
+  67:libscpi/src/error.c ****             context->interface->error(context, 0);
+ 204              		.loc 1 67 20 is_stmt 0 view .LVU40
+ 205 0024 E36A     		ldr	r3, [r4, #44]
+  67:libscpi/src/error.c ****             context->interface->error(context, 0);
+ 206              		.loc 1 67 12 view .LVU41
+ 207 0026 3BB1     		cbz	r3, .L11
+  67:libscpi/src/error.c ****             context->interface->error(context, 0);
+ 208              		.loc 1 67 53 view .LVU42
+ 209 0028 1B68     		ldr	r3, [r3]
+  67:libscpi/src/error.c ****             context->interface->error(context, 0);
+ 210              		.loc 1 67 32 view .LVU43
+ 211 002a 2BB1     		cbz	r3, .L11
+  68:libscpi/src/error.c ****         }
+ 212              		.loc 1 68 13 is_stmt 1 view .LVU44
+ 213 002c 0199     		ldr	r1, [sp, #4]
+ 214 002e 2046     		mov	r0, r4
+ 215              	.LBE5:
+ 216              	.LBE4:
+  71:libscpi/src/error.c **** 
+ 217              		.loc 1 71 1 is_stmt 0 view .LVU45
+ 218 0030 02B0     		add	sp, sp, #8
+ 219              	.LCFI6:
+ 220              		.cfi_remember_state
+ 221              		.cfi_def_cfa_offset 8
+ 222              		@ sp needed
+ 223 0032 BDE81040 		pop	{r4, lr}
+ 224              	.LCFI7:
+ 225              		.cfi_restore 14
+ 226              		.cfi_restore 4
+ 227              		.cfi_def_cfa_offset 0
+ 228              	.LVL16:
+ 229              	.LBB7:
+ 230              	.LBB6:
+  68:libscpi/src/error.c ****         }
+ 231              		.loc 1 68 13 view .LVU46
+ 232 0036 1847     		bx	r3
+ 233              	.LVL17:
+ 234              	.L11:
+ 235              	.LCFI8:
+ 236              		.cfi_restore_state
+  68:libscpi/src/error.c ****         }
+ 237              		.loc 1 68 13 view .LVU47
+ 238              	.LBE6:
+ 239              	.LBE7:
+  71:libscpi/src/error.c **** 
+ 240              		.loc 1 71 1 view .LVU48
+ 241 0038 02B0     		add	sp, sp, #8
+ 242              	.LCFI9:
+ 243              		.cfi_def_cfa_offset 8
+ 244              		@ sp needed
+ 245 003a 10BD     		pop	{r4, pc}
+  71:libscpi/src/error.c **** 
+ 246              		.loc 1 71 1 view .LVU49
+ 247              		.cfi_endproc
+ARM GAS  /tmp/ccsdcRxX.s 			page 8
+
+
+ 248              	.LFE1:
+ 250              		.section	.text.SCPI_ErrorClear,"ax",%progbits
+ 251              		.align	1
+ 252              		.global	SCPI_ErrorClear
+ 253              		.syntax unified
+ 254              		.thumb
+ 255              		.thumb_func
+ 256              		.fpu fpv4-sp-d16
+ 258              	SCPI_ErrorClear:
+ 259              	.LVL18:
+ 260              	.LFB3:
+  90:libscpi/src/error.c **** #if USE_DEVICE_DEPENDENT_ERROR_INFORMATION
+ 261              		.loc 1 90 40 is_stmt 1 view -0
+ 262              		.cfi_startproc
+ 263              		@ args = 0, pretend = 0, frame = 0
+ 264              		@ frame_needed = 0, uses_anonymous_args = 0
+  97:libscpi/src/error.c **** 
+ 265              		.loc 1 97 5 view .LVU51
+  90:libscpi/src/error.c **** #if USE_DEVICE_DEPENDENT_ERROR_INFORMATION
+ 266              		.loc 1 90 40 is_stmt 0 view .LVU52
+ 267 0000 10B5     		push	{r4, lr}
+ 268              	.LCFI10:
+ 269              		.cfi_def_cfa_offset 8
+ 270              		.cfi_offset 4, -8
+ 271              		.cfi_offset 14, -4
+  90:libscpi/src/error.c **** #if USE_DEVICE_DEPENDENT_ERROR_INFORMATION
+ 272              		.loc 1 90 40 view .LVU53
+ 273 0002 0446     		mov	r4, r0
+  97:libscpi/src/error.c **** 
+ 274              		.loc 1 97 5 view .LVU54
+ 275 0004 3C30     		adds	r0, r0, #60
+ 276              	.LVL19:
+  97:libscpi/src/error.c **** 
+ 277              		.loc 1 97 5 view .LVU55
+ 278 0006 FFF7FEFF 		bl	fifo_clear
+ 279              	.LVL20:
+  99:libscpi/src/error.c **** }
+ 280              		.loc 1 99 5 is_stmt 1 view .LVU56
+ 281 000a 2046     		mov	r0, r4
+ 100:libscpi/src/error.c **** 
+ 282              		.loc 1 100 1 is_stmt 0 view .LVU57
+ 283 000c BDE81040 		pop	{r4, lr}
+ 284              	.LCFI11:
+ 285              		.cfi_restore 14
+ 286              		.cfi_restore 4
+ 287              		.cfi_def_cfa_offset 0
+ 288              	.LVL21:
+  99:libscpi/src/error.c **** }
+ 289              		.loc 1 99 5 view .LVU58
+ 290 0010 FFF7FEBF 		b	SCPI_ErrorEmitEmpty
+ 291              	.LVL22:
+  99:libscpi/src/error.c **** }
+ 292              		.loc 1 99 5 view .LVU59
+ 293              		.cfi_endproc
+ 294              	.LFE3:
+ 296              		.section	.text.SCPI_ErrorPop,"ax",%progbits
+ 297              		.align	1
+ARM GAS  /tmp/ccsdcRxX.s 			page 9
+
+
+ 298              		.global	SCPI_ErrorPop
+ 299              		.syntax unified
+ 300              		.thumb
+ 301              		.thumb_func
+ 302              		.fpu fpv4-sp-d16
+ 304              	SCPI_ErrorPop:
+ 305              	.LVL23:
+ 306              	.LFB4:
+ 108:libscpi/src/error.c ****     if (!error || !context) return FALSE;
+ 307              		.loc 1 108 67 is_stmt 1 view -0
+ 308              		.cfi_startproc
+ 309              		@ args = 0, pretend = 0, frame = 0
+ 310              		@ frame_needed = 0, uses_anonymous_args = 0
+ 109:libscpi/src/error.c ****     SCPI_ERROR_SETVAL(error, 0, NULL);
+ 311              		.loc 1 109 5 view .LVU61
+ 108:libscpi/src/error.c ****     if (!error || !context) return FALSE;
+ 312              		.loc 1 108 67 is_stmt 0 view .LVU62
+ 313 0000 10B5     		push	{r4, lr}
+ 314              	.LCFI12:
+ 315              		.cfi_def_cfa_offset 8
+ 316              		.cfi_offset 4, -8
+ 317              		.cfi_offset 14, -4
+ 108:libscpi/src/error.c ****     if (!error || !context) return FALSE;
+ 318              		.loc 1 108 67 view .LVU63
+ 319 0002 0446     		mov	r4, r0
+ 109:libscpi/src/error.c ****     SCPI_ERROR_SETVAL(error, 0, NULL);
+ 320              		.loc 1 109 8 view .LVU64
+ 321 0004 0846     		mov	r0, r1
+ 322              	.LVL24:
+ 109:libscpi/src/error.c ****     SCPI_ERROR_SETVAL(error, 0, NULL);
+ 323              		.loc 1 109 8 view .LVU65
+ 324 0006 51B1     		cbz	r1, .L26
+ 109:libscpi/src/error.c ****     SCPI_ERROR_SETVAL(error, 0, NULL);
+ 325              		.loc 1 109 16 discriminator 2 view .LVU66
+ 326 0008 54B1     		cbz	r4, .L28
+ 110:libscpi/src/error.c ****     fifo_remove(&context->error_queue, error);
+ 327              		.loc 1 110 5 is_stmt 1 view .LVU67
+ 110:libscpi/src/error.c ****     fifo_remove(&context->error_queue, error);
+ 328              		.loc 1 110 5 view .LVU68
+ 329 000a 0023     		movs	r3, #0
+ 330 000c 0B80     		strh	r3, [r1]	@ movhi
+ 110:libscpi/src/error.c ****     fifo_remove(&context->error_queue, error);
+ 331              		.loc 1 110 5 view .LVU69
+ 110:libscpi/src/error.c ****     fifo_remove(&context->error_queue, error);
+ 332              		.loc 1 110 5 view .LVU70
+ 111:libscpi/src/error.c **** 
+ 333              		.loc 1 111 5 view .LVU71
+ 334 000e 04F13C00 		add	r0, r4, #60
+ 335 0012 FFF7FEFF 		bl	fifo_remove
+ 336              	.LVL25:
+ 113:libscpi/src/error.c **** 
+ 337              		.loc 1 113 5 view .LVU72
+ 338 0016 2046     		mov	r0, r4
+ 339 0018 FFF7FEFF 		bl	SCPI_ErrorEmitEmpty
+ 340              	.LVL26:
+ 115:libscpi/src/error.c **** }
+ 341              		.loc 1 115 5 view .LVU73
+ARM GAS  /tmp/ccsdcRxX.s 			page 10
+
+
+ 115:libscpi/src/error.c **** }
+ 342              		.loc 1 115 12 is_stmt 0 view .LVU74
+ 343 001c 0120     		movs	r0, #1
+ 344              	.L26:
+ 116:libscpi/src/error.c **** 
+ 345              		.loc 1 116 1 view .LVU75
+ 346 001e 10BD     		pop	{r4, pc}
+ 347              	.LVL27:
+ 348              	.L28:
+ 109:libscpi/src/error.c ****     SCPI_ERROR_SETVAL(error, 0, NULL);
+ 349              		.loc 1 109 36 view .LVU76
+ 350 0020 2046     		mov	r0, r4
+ 351              	.LVL28:
+ 109:libscpi/src/error.c ****     SCPI_ERROR_SETVAL(error, 0, NULL);
+ 352              		.loc 1 109 36 view .LVU77
+ 353 0022 FCE7     		b	.L26
+ 354              		.cfi_endproc
+ 355              	.LFE4:
+ 357              		.section	.text.SCPI_ErrorPushEx,"ax",%progbits
+ 358              		.align	1
+ 359              		.global	SCPI_ErrorPushEx
+ 360              		.syntax unified
+ 361              		.thumb
+ 362              		.thumb_func
+ 363              		.fpu fpv4-sp-d16
+ 365              	SCPI_ErrorPushEx:
+ 366              	.LVL29:
+ 367              	.LFB7:
+ 130:libscpi/src/error.c **** 
+ 131:libscpi/src/error.c **** static scpi_bool_t SCPI_ErrorAddInternal(scpi_t * context, int16_t err, char * info, size_t info_le
+ 132:libscpi/src/error.c ****     scpi_error_t error_value;
+ 133:libscpi/src/error.c ****     /* SCPIDEFINE_strndup is sometimes a dumy that does not reference it's arguments. 
+ 134:libscpi/src/error.c ****        Since info_len is not referenced elsewhere caoing to void prevents unusd argument warnings *
+ 135:libscpi/src/error.c ****     (void) info_len;
+ 136:libscpi/src/error.c ****     char * info_ptr = info ? SCPIDEFINE_strndup(&context->error_info_heap, info, info_len) : NULL;
+ 137:libscpi/src/error.c ****     SCPI_ERROR_SETVAL(&error_value, err, info_ptr);
+ 138:libscpi/src/error.c ****     if (!fifo_add(&context->error_queue, &error_value)) {
+ 139:libscpi/src/error.c ****         SCPIDEFINE_free(&context->error_info_heap, error_value.device_dependent_info, true);
+ 140:libscpi/src/error.c ****         fifo_remove_last(&context->error_queue, &error_value);
+ 141:libscpi/src/error.c ****         SCPIDEFINE_free(&context->error_info_heap, error_value.device_dependent_info, true);
+ 142:libscpi/src/error.c ****         SCPI_ERROR_SETVAL(&error_value, SCPI_ERROR_QUEUE_OVERFLOW, NULL);
+ 143:libscpi/src/error.c ****         fifo_add(&context->error_queue, &error_value);
+ 144:libscpi/src/error.c ****         return FALSE;
+ 145:libscpi/src/error.c ****     }
+ 146:libscpi/src/error.c ****     return TRUE;
+ 147:libscpi/src/error.c **** }
+ 148:libscpi/src/error.c **** 
+ 149:libscpi/src/error.c **** struct error_reg {
+ 150:libscpi/src/error.c ****     int16_t from;
+ 151:libscpi/src/error.c ****     int16_t to;
+ 152:libscpi/src/error.c ****     scpi_reg_val_t esrBit;
+ 153:libscpi/src/error.c **** };
+ 154:libscpi/src/error.c **** 
+ 155:libscpi/src/error.c **** #define ERROR_DEFS_N 9
+ 156:libscpi/src/error.c **** 
+ 157:libscpi/src/error.c **** static const struct error_reg errs[ERROR_DEFS_N] = {
+ 158:libscpi/src/error.c ****     {-100, -199, ESR_CER}, /* Command error (e.g. syntax error) ch 21.8.9    */
+ARM GAS  /tmp/ccsdcRxX.s 			page 11
+
+
+ 159:libscpi/src/error.c ****     {-200, -299, ESR_EER}, /* Execution Error (e.g. range error) ch 21.8.10  */
+ 160:libscpi/src/error.c ****     {-300, -399, ESR_DER}, /* Device specific error -300, -399 ch 21.8.11    */
+ 161:libscpi/src/error.c ****     { 1, 32767, ESR_DER}, /* Device designer provided specific error 1, 32767 ch 21.8.11    */
+ 162:libscpi/src/error.c ****     {-400, -499, ESR_QER}, /* Query error -400, -499 ch 21.8.12              */
+ 163:libscpi/src/error.c ****     {-500, -599, ESR_PON}, /* Power on event -500, -599 ch 21.8.13           */
+ 164:libscpi/src/error.c ****     {-600, -699, ESR_URQ}, /* User Request Event -600, -699 ch 21.8.14       */
+ 165:libscpi/src/error.c ****     {-700, -799, ESR_REQ}, /* Request Control Event -700, -799 ch 21.8.15    */
+ 166:libscpi/src/error.c ****     {-800, -899, ESR_OPC}, /* Operation Complete Event -800, -899 ch 21.8.16 */
+ 167:libscpi/src/error.c **** };
+ 168:libscpi/src/error.c **** 
+ 169:libscpi/src/error.c **** /**
+ 170:libscpi/src/error.c ****  * Push error to queue
+ 171:libscpi/src/error.c ****  * @param context
+ 172:libscpi/src/error.c ****  * @param err - error number
+ 173:libscpi/src/error.c ****  * @param info - additional text information or NULL for no text
+ 174:libscpi/src/error.c ****  * @param info_len - length of text or 0 for automatic length
+ 175:libscpi/src/error.c ****  */
+ 176:libscpi/src/error.c **** void SCPI_ErrorPushEx(scpi_t * context, int16_t err, char * info, size_t info_len) {
+ 368              		.loc 1 176 84 is_stmt 1 view -0
+ 369              		.cfi_startproc
+ 370              		@ args = 0, pretend = 0, frame = 8
+ 371              		@ frame_needed = 0, uses_anonymous_args = 0
+ 177:libscpi/src/error.c ****     int i;
+ 372              		.loc 1 177 5 view .LVU79
+ 178:libscpi/src/error.c ****     /* automatic calculation of length */
+ 179:libscpi/src/error.c ****     if (info && info_len == 0) {
+ 373              		.loc 1 179 5 view .LVU80
+ 180:libscpi/src/error.c ****         info_len = SCPIDEFINE_strnlen(info, SCPI_STD_ERROR_DESC_MAX_STRING_LENGTH);
+ 181:libscpi/src/error.c ****     }
+ 182:libscpi/src/error.c ****     scpi_bool_t queue_overflow = !SCPI_ErrorAddInternal(context, err, info, info_len);
+ 374              		.loc 1 182 5 view .LVU81
+ 375              	.LBB10:
+ 376              	.LBI10:
+ 131:libscpi/src/error.c ****     scpi_error_t error_value;
+ 377              		.loc 1 131 20 view .LVU82
+ 378              	.LBB11:
+ 132:libscpi/src/error.c ****     /* SCPIDEFINE_strndup is sometimes a dumy that does not reference it's arguments. 
+ 379              		.loc 1 132 5 view .LVU83
+ 135:libscpi/src/error.c ****     char * info_ptr = info ? SCPIDEFINE_strndup(&context->error_info_heap, info, info_len) : NULL;
+ 380              		.loc 1 135 5 view .LVU84
+ 136:libscpi/src/error.c ****     SCPI_ERROR_SETVAL(&error_value, err, info_ptr);
+ 381              		.loc 1 136 5 view .LVU85
+ 137:libscpi/src/error.c ****     if (!fifo_add(&context->error_queue, &error_value)) {
+ 382              		.loc 1 137 5 view .LVU86
+ 137:libscpi/src/error.c ****     if (!fifo_add(&context->error_queue, &error_value)) {
+ 383              		.loc 1 137 5 view .LVU87
+ 384              	.LBE11:
+ 385              	.LBE10:
+ 176:libscpi/src/error.c ****     int i;
+ 386              		.loc 1 176 84 is_stmt 0 view .LVU88
+ 387 0000 2DE9F341 		push	{r0, r1, r4, r5, r6, r7, r8, lr}
+ 388              	.LCFI13:
+ 389              		.cfi_def_cfa_offset 32
+ 390              		.cfi_offset 4, -24
+ 391              		.cfi_offset 5, -20
+ 392              		.cfi_offset 6, -16
+ 393              		.cfi_offset 7, -12
+ARM GAS  /tmp/ccsdcRxX.s 			page 12
+
+
+ 394              		.cfi_offset 8, -8
+ 395              		.cfi_offset 14, -4
+ 396              	.LBB14:
+ 397              	.LBB12:
+ 138:libscpi/src/error.c ****         SCPIDEFINE_free(&context->error_info_heap, error_value.device_dependent_info, true);
+ 398              		.loc 1 138 10 view .LVU89
+ 399 0004 00F13C06 		add	r6, r0, #60
+ 137:libscpi/src/error.c ****     if (!fifo_add(&context->error_queue, &error_value)) {
+ 400              		.loc 1 137 5 view .LVU90
+ 401 0008 ADF80410 		strh	r1, [sp, #4]	@ movhi
+ 137:libscpi/src/error.c ****     if (!fifo_add(&context->error_queue, &error_value)) {
+ 402              		.loc 1 137 5 is_stmt 1 view .LVU91
+ 137:libscpi/src/error.c ****     if (!fifo_add(&context->error_queue, &error_value)) {
+ 403              		.loc 1 137 5 view .LVU92
+ 138:libscpi/src/error.c ****         SCPIDEFINE_free(&context->error_info_heap, error_value.device_dependent_info, true);
+ 404              		.loc 1 138 5 view .LVU93
+ 405              	.LBE12:
+ 406              	.LBE14:
+ 176:libscpi/src/error.c ****     int i;
+ 407              		.loc 1 176 84 is_stmt 0 view .LVU94
+ 408 000c 0446     		mov	r4, r0
+ 409 000e 0D46     		mov	r5, r1
+ 410              	.LBB15:
+ 411              	.LBB13:
+ 138:libscpi/src/error.c ****         SCPIDEFINE_free(&context->error_info_heap, error_value.device_dependent_info, true);
+ 412              		.loc 1 138 10 view .LVU95
+ 413 0010 3046     		mov	r0, r6
+ 414              	.LVL30:
+ 138:libscpi/src/error.c ****         SCPIDEFINE_free(&context->error_info_heap, error_value.device_dependent_info, true);
+ 415              		.loc 1 138 10 view .LVU96
+ 416 0012 01A9     		add	r1, sp, #4
+ 417              	.LVL31:
+ 138:libscpi/src/error.c ****         SCPIDEFINE_free(&context->error_info_heap, error_value.device_dependent_info, true);
+ 418              		.loc 1 138 10 view .LVU97
+ 419 0014 FFF7FEFF 		bl	fifo_add
+ 420              	.LVL32:
+ 138:libscpi/src/error.c ****         SCPIDEFINE_free(&context->error_info_heap, error_value.device_dependent_info, true);
+ 421              		.loc 1 138 8 view .LVU98
+ 422 0018 0746     		mov	r7, r0
+ 423 001a 58B9     		cbnz	r0, .L30
+ 139:libscpi/src/error.c ****         fifo_remove_last(&context->error_queue, &error_value);
+ 424              		.loc 1 139 92 is_stmt 1 view .LVU99
+ 140:libscpi/src/error.c ****         SCPIDEFINE_free(&context->error_info_heap, error_value.device_dependent_info, true);
+ 425              		.loc 1 140 9 view .LVU100
+ 426 001c 01A9     		add	r1, sp, #4
+ 427 001e 3046     		mov	r0, r6
+ 428 0020 FFF7FEFF 		bl	fifo_remove_last
+ 429              	.LVL33:
+ 141:libscpi/src/error.c ****         SCPI_ERROR_SETVAL(&error_value, SCPI_ERROR_QUEUE_OVERFLOW, NULL);
+ 430              		.loc 1 141 92 view .LVU101
+ 142:libscpi/src/error.c ****         fifo_add(&context->error_queue, &error_value);
+ 431              		.loc 1 142 9 view .LVU102
+ 142:libscpi/src/error.c ****         fifo_add(&context->error_queue, &error_value);
+ 432              		.loc 1 142 9 view .LVU103
+ 433 0024 4FF6A263 		movw	r3, #65186
+ 143:libscpi/src/error.c ****         return FALSE;
+ 434              		.loc 1 143 9 is_stmt 0 view .LVU104
+ARM GAS  /tmp/ccsdcRxX.s 			page 13
+
+
+ 435 0028 01A9     		add	r1, sp, #4
+ 436 002a 3046     		mov	r0, r6
+ 142:libscpi/src/error.c ****         fifo_add(&context->error_queue, &error_value);
+ 437              		.loc 1 142 9 view .LVU105
+ 438 002c ADF80430 		strh	r3, [sp, #4]	@ movhi
+ 142:libscpi/src/error.c ****         fifo_add(&context->error_queue, &error_value);
+ 439              		.loc 1 142 9 is_stmt 1 view .LVU106
+ 142:libscpi/src/error.c ****         fifo_add(&context->error_queue, &error_value);
+ 440              		.loc 1 142 9 view .LVU107
+ 143:libscpi/src/error.c ****         return FALSE;
+ 441              		.loc 1 143 9 view .LVU108
+ 442 0030 FFF7FEFF 		bl	fifo_add
+ 443              	.LVL34:
+ 144:libscpi/src/error.c ****     }
+ 444              		.loc 1 144 9 view .LVU109
+ 445              	.L30:
+ 144:libscpi/src/error.c ****     }
+ 446              		.loc 1 144 9 is_stmt 0 view .LVU110
+ 447              	.LBE13:
+ 448              	.LBE15:
+ 183:libscpi/src/error.c **** 
+ 184:libscpi/src/error.c ****     for (i = 0; i < ERROR_DEFS_N; i++) {
+ 449              		.loc 1 184 5 is_stmt 1 view .LVU111
+ 450              		.loc 1 184 17 view .LVU112
+ 451 0034 134E     		ldr	r6, .L39
+ 452              		.loc 1 184 12 is_stmt 0 view .LVU113
+ 453 0036 4FF00008 		mov	r8, #0
+ 454              	.LVL35:
+ 455              	.L32:
+ 185:libscpi/src/error.c ****         if ((err <= errs[i].from) && (err >= errs[i].to)) {
+ 456              		.loc 1 185 9 is_stmt 1 view .LVU114
+ 457              		.loc 1 185 12 is_stmt 0 view .LVU115
+ 458 003a B6F90030 		ldrsh	r3, [r6]
+ 459 003e AB42     		cmp	r3, r5
+ 460 0040 08DB     		blt	.L31
+ 461              		.loc 1 185 35 discriminator 1 view .LVU116
+ 462 0042 B6F90230 		ldrsh	r3, [r6, #2]
+ 463 0046 AB42     		cmp	r3, r5
+ 464 0048 04DC     		bgt	.L31
+ 186:libscpi/src/error.c ****             SCPI_RegSetBits(context, SCPI_REG_ESR, errs[i].esrBit);
+ 465              		.loc 1 186 13 is_stmt 1 view .LVU117
+ 466 004a B288     		ldrh	r2, [r6, #4]
+ 467 004c 0221     		movs	r1, #2
+ 468 004e 2046     		mov	r0, r4
+ 469 0050 FFF7FEFF 		bl	SCPI_RegSetBits
+ 470              	.LVL36:
+ 471              	.L31:
+ 184:libscpi/src/error.c ****         if ((err <= errs[i].from) && (err >= errs[i].to)) {
+ 472              		.loc 1 184 35 discriminator 2 view .LVU118
+ 184:libscpi/src/error.c ****         if ((err <= errs[i].from) && (err >= errs[i].to)) {
+ 473              		.loc 1 184 36 is_stmt 0 discriminator 2 view .LVU119
+ 474 0054 08F10108 		add	r8, r8, #1
+ 475              	.LVL37:
+ 184:libscpi/src/error.c ****         if ((err <= errs[i].from) && (err >= errs[i].to)) {
+ 476              		.loc 1 184 17 is_stmt 1 discriminator 2 view .LVU120
+ 184:libscpi/src/error.c ****         if ((err <= errs[i].from) && (err >= errs[i].to)) {
+ 477              		.loc 1 184 5 is_stmt 0 discriminator 2 view .LVU121
+ARM GAS  /tmp/ccsdcRxX.s 			page 14
+
+
+ 478 0058 B8F1090F 		cmp	r8, #9
+ 479 005c 06F10606 		add	r6, r6, #6
+ 480 0060 EBD1     		bne	.L32
+ 187:libscpi/src/error.c ****         }
+ 188:libscpi/src/error.c ****     }
+ 189:libscpi/src/error.c **** 
+ 190:libscpi/src/error.c ****     SCPI_ErrorEmit(context, err);
+ 481              		.loc 1 190 5 is_stmt 1 view .LVU122
+ 482 0062 2946     		mov	r1, r5
+ 483 0064 2046     		mov	r0, r4
+ 484 0066 FFF7FEFF 		bl	SCPI_ErrorEmit
+ 485              	.LVL38:
+ 191:libscpi/src/error.c ****     if (queue_overflow) {
+ 486              		.loc 1 191 5 view .LVU123
+ 487              		.loc 1 191 8 is_stmt 0 view .LVU124
+ 488 006a 1FB9     		cbnz	r7, .L33
+ 192:libscpi/src/error.c ****         SCPI_ErrorEmit(context, SCPI_ERROR_QUEUE_OVERFLOW);
+ 489              		.loc 1 192 9 is_stmt 1 view .LVU125
+ 490 006c 0649     		ldr	r1, .L39+4
+ 491 006e 2046     		mov	r0, r4
+ 492 0070 FFF7FEFF 		bl	SCPI_ErrorEmit
+ 493              	.LVL39:
+ 494              	.L33:
+ 193:libscpi/src/error.c ****     }
+ 194:libscpi/src/error.c **** 
+ 195:libscpi/src/error.c ****     if (context) {
+ 495              		.loc 1 195 5 view .LVU126
+ 496              		.loc 1 195 8 is_stmt 0 view .LVU127
+ 497 0074 14B1     		cbz	r4, .L29
+ 196:libscpi/src/error.c ****         context->cmd_error = TRUE;
+ 498              		.loc 1 196 9 is_stmt 1 view .LVU128
+ 499              		.loc 1 196 28 is_stmt 0 view .LVU129
+ 500 0076 0123     		movs	r3, #1
+ 501 0078 84F83830 		strb	r3, [r4, #56]
+ 502              	.L29:
+ 197:libscpi/src/error.c ****     }
+ 198:libscpi/src/error.c **** }
+ 503              		.loc 1 198 1 view .LVU130
+ 504 007c 02B0     		add	sp, sp, #8
+ 505              	.LCFI14:
+ 506              		.cfi_def_cfa_offset 24
+ 507              		@ sp needed
+ 508 007e BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+ 509              	.LVL40:
+ 510              	.L40:
+ 511              		.loc 1 198 1 view .LVU131
+ 512 0082 00BF     		.align	2
+ 513              	.L39:
+ 514 0084 00000000 		.word	.LANCHOR0
+ 515 0088 A2FEFFFF 		.word	-350
+ 516              		.cfi_endproc
+ 517              	.LFE7:
+ 519              		.section	.text.SCPI_ErrorPush,"ax",%progbits
+ 520              		.align	1
+ 521              		.global	SCPI_ErrorPush
+ 522              		.syntax unified
+ 523              		.thumb
+ARM GAS  /tmp/ccsdcRxX.s 			page 15
+
+
+ 524              		.thumb_func
+ 525              		.fpu fpv4-sp-d16
+ 527              	SCPI_ErrorPush:
+ 528              	.LVL41:
+ 529              	.LFB8:
+ 199:libscpi/src/error.c **** 
+ 200:libscpi/src/error.c **** /**
+ 201:libscpi/src/error.c ****  * Push error to queue
+ 202:libscpi/src/error.c ****  * @param context - scpi context
+ 203:libscpi/src/error.c ****  * @param err - error number
+ 204:libscpi/src/error.c ****  */
+ 205:libscpi/src/error.c **** void SCPI_ErrorPush(scpi_t * context, int16_t err) {
+ 530              		.loc 1 205 52 is_stmt 1 view -0
+ 531              		.cfi_startproc
+ 532              		@ args = 0, pretend = 0, frame = 0
+ 533              		@ frame_needed = 0, uses_anonymous_args = 0
+ 534              		@ link register save eliminated.
+ 206:libscpi/src/error.c ****     SCPI_ErrorPushEx(context, err, NULL, 0);
+ 535              		.loc 1 206 5 view .LVU133
+ 536 0000 0023     		movs	r3, #0
+ 537 0002 1A46     		mov	r2, r3
+ 538 0004 FFF7FEBF 		b	SCPI_ErrorPushEx
+ 539              	.LVL42:
+ 540              		.loc 1 206 5 is_stmt 0 view .LVU134
+ 541              		.cfi_endproc
+ 542              	.LFE8:
+ 544              		.section	.rodata.SCPI_ErrorTranslate.str1.1,"aMS",%progbits,1
+ 545              	.LC0:
+ 546 0000 556E6B6E 		.ascii	"Unknown error\000"
+ 546      6F776E20 
+ 546      6572726F 
+ 546      7200
+ 547              	.LC1:
+ 548 000e 45787072 		.ascii	"Expression error\000"
+ 548      65737369 
+ 548      6F6E2065 
+ 548      72726F72 
+ 548      00
+ 549              	.LC2:
+ 550 001f 496E7661 		.ascii	"Invalid separator\000"
+ 550      6C696420 
+ 550      73657061 
+ 550      7261746F 
+ 550      7200
+ 551              	.LC3:
+ 552 0031 44617461 		.ascii	"Data type error\000"
+ 552      20747970 
+ 552      65206572 
+ 552      726F7200 
+ 553              	.LC4:
+ 554 0041 50617261 		.ascii	"Parameter not allowed\000"
+ 554      6D657465 
+ 554      72206E6F 
+ 554      7420616C 
+ 554      6C6F7765 
+ 555              	.LC5:
+ 556 0057 4D697373 		.ascii	"Missing parameter\000"
+ARM GAS  /tmp/ccsdcRxX.s 			page 16
+
+
+ 556      696E6720 
+ 556      70617261 
+ 556      6D657465 
+ 556      7200
+ 557              	.LC6:
+ 558 0069 556E6465 		.ascii	"Undefined header\000"
+ 558      66696E65 
+ 558      64206865 
+ 558      61646572 
+ 558      00
+ 559              	.LC7:
+ 560 007a 51756575 		.ascii	"Queue overflow\000"
+ 560      65206F76 
+ 560      6572666C 
+ 560      6F7700
+ 561              	.LC8:
+ 562 0089 496E7661 		.ascii	"Invalid string data\000"
+ 562      6C696420 
+ 562      73747269 
+ 562      6E672064 
+ 562      61746100 
+ 563              	.LC9:
+ 564 009d 496C6C65 		.ascii	"Illegal parameter value\000"
+ 564      67616C20 
+ 564      70617261 
+ 564      6D657465 
+ 564      72207661 
+ 565              	.LC10:
+ 566 00b5 53756666 		.ascii	"Suffix not allowed\000"
+ 566      6978206E 
+ 566      6F742061 
+ 566      6C6C6F77 
+ 566      656400
+ 567              	.LC11:
+ 568 00c8 496E7661 		.ascii	"Invalid suffix\000"
+ 568      6C696420 
+ 568      73756666 
+ 568      697800
+ 569              	.LC12:
+ 570 00d7 496E7661 		.ascii	"Invalid character\000"
+ 570      6C696420 
+ 570      63686172 
+ 570      61637465 
+ 570      7200
+ 571              	.LC13:
+ 572 00e9 45786563 		.ascii	"Execution error\000"
+ 572      7574696F 
+ 572      6E206572 
+ 572      726F7200 
+ 573              	.LC14:
+ 574 00f9 496E7075 		.ascii	"Input buffer overrun\000"
+ 574      74206275 
+ 574      66666572 
+ 574      206F7665 
+ 574      7272756E 
+ 575              	.LC15:
+ 576 010e 53797374 		.ascii	"System error\000"
+ARM GAS  /tmp/ccsdcRxX.s 			page 17
+
+
+ 576      656D2065 
+ 576      72726F72 
+ 576      00
+ 577              	.LC16:
+ 578 011b 4E6F2065 		.ascii	"No error\000"
+ 578      72726F72 
+ 578      00
+ 579              		.section	.text.SCPI_ErrorTranslate,"ax",%progbits
+ 580              		.align	1
+ 581              		.global	SCPI_ErrorTranslate
+ 582              		.syntax unified
+ 583              		.thumb
+ 584              		.thumb_func
+ 585              		.fpu fpv4-sp-d16
+ 587              	SCPI_ErrorTranslate:
+ 588              	.LVL43:
+ 589              	.LFB9:
+ 207:libscpi/src/error.c ****     return;
+ 208:libscpi/src/error.c **** }
+ 209:libscpi/src/error.c **** 
+ 210:libscpi/src/error.c **** /**
+ 211:libscpi/src/error.c ****  * Translate error number to string
+ 212:libscpi/src/error.c ****  * @param err - error number
+ 213:libscpi/src/error.c ****  * @return Error string representation
+ 214:libscpi/src/error.c ****  */
+ 215:libscpi/src/error.c **** const char * SCPI_ErrorTranslate(int16_t err) {
+ 590              		.loc 1 215 47 is_stmt 1 view -0
+ 591              		.cfi_startproc
+ 592              		@ args = 0, pretend = 0, frame = 0
+ 593              		@ frame_needed = 0, uses_anonymous_args = 0
+ 594              		@ link register save eliminated.
+ 216:libscpi/src/error.c ****     switch (err) {
+ 595              		.loc 1 216 5 view .LVU136
+ 596 0000 10F1830F 		cmn	r0, #131
+ 597 0004 52D0     		beq	.L56
+ 598 0006 10F1820F 		cmn	r0, #130
+ 599 000a 38DA     		bge	.L44
+ 600 000c 10F1C80F 		cmn	r0, #200
+ 601 0010 4ED0     		beq	.L57
+ 602 0012 10F1C70F 		cmn	r0, #199
+ 603 0016 24DA     		bge	.L45
+ 604 0018 10F59B7F 		cmn	r0, #310
+ 605 001c 4AD0     		beq	.L58
+ 606 001e 18DC     		bgt	.L46
+ 607 0020 6FF4B573 		mvn	r3, #362
+ 608 0024 9842     		cmp	r0, r3
+ 609 0026 47D0     		beq	.L59
+ 217:libscpi/src/error.c **** #define X(def, val, str) case def: return str;
+ 218:libscpi/src/error.c **** #if USE_FULL_ERROR_LIST
+ 219:libscpi/src/error.c **** #define XE X
+ 220:libscpi/src/error.c **** #else
+ 221:libscpi/src/error.c **** #define XE(def, val, str)
+ 222:libscpi/src/error.c **** #endif
+ 223:libscpi/src/error.c ****         LIST_OF_ERRORS
+ 610              		.loc 1 223 9 is_stmt 0 view .LVU137
+ 611 0028 274B     		ldr	r3, .L68
+ 612 002a 10F5AF7F 		cmn	r0, #350
+ARM GAS  /tmp/ccsdcRxX.s 			page 18
+
+
+ 613 002e 2748     		ldr	r0, .L68+4
+ 614              	.LVL44:
+ 615              		.loc 1 223 9 view .LVU138
+ 616 0030 08BF     		it	eq
+ 617 0032 1846     		moveq	r0, r3
+ 618 0034 7047     		bx	lr
+ 619              	.LVL45:
+ 620              	.L55:
+ 621              		.loc 1 223 9 view .LVU139
+ 622 0036 7130     		adds	r0, r0, #113
+ 623              	.LVL46:
+ 624              		.loc 1 223 9 view .LVU140
+ 625 0038 0C28     		cmp	r0, #12
+ 626 003a 26D8     		bhi	.L67
+ 627 003c DFE800F0 		tbb	[pc, r0]
+ 628              	.L49:
+ 629 0040 34       		.byte	(.L53-.L49)/2
+ 630 0041 25       		.byte	(.L67-.L49)/2
+ 631 0042 25       		.byte	(.L67-.L49)/2
+ 632 0043 25       		.byte	(.L67-.L49)/2
+ 633 0044 32       		.byte	(.L52-.L49)/2
+ 634 0045 30       		.byte	(.L51-.L49)/2
+ 635 0046 25       		.byte	(.L67-.L49)/2
+ 636 0047 25       		.byte	(.L67-.L49)/2
+ 637 0048 25       		.byte	(.L67-.L49)/2
+ 638 0049 2E       		.byte	(.L50-.L49)/2
+ 639 004a 3E       		.byte	(.L61-.L49)/2
+ 640 004b 25       		.byte	(.L67-.L49)/2
+ 641 004c 07       		.byte	(.L48-.L49)/2
+ 642 004d 00       		.p2align 1
+ 643              	.L48:
+ 216:libscpi/src/error.c ****     switch (err) {
+ 644              		.loc 1 216 5 view .LVU141
+ 645 004e 2048     		ldr	r0, .L68+8
+ 646 0050 7047     		bx	lr
+ 647              	.LVL47:
+ 648              	.L46:
+ 649              		.loc 1 223 9 view .LVU142
+ 650 0052 1E4A     		ldr	r2, .L68+4
+ 651 0054 1F4B     		ldr	r3, .L68+12
+ 652 0056 10F1E00F 		cmn	r0, #224
+ 653 005a 14BF     		ite	ne
+ 654 005c 1046     		movne	r0, r2
+ 655 005e 1846     		moveq	r0, r3
+ 656              	.LVL48:
+ 657              		.loc 1 223 9 view .LVU143
+ 658 0060 7047     		bx	lr
+ 659              	.LVL49:
+ 660              	.L45:
+ 216:libscpi/src/error.c ****     switch (err) {
+ 661              		.loc 1 216 5 view .LVU144
+ 662 0062 10F1970F 		cmn	r0, #151
+ 663 0066 2BD0     		beq	.L63
+ 664 0068 10F18A0F 		cmn	r0, #138
+ 665 006c 2AD0     		beq	.L64
+ 666              		.loc 1 223 9 view .LVU145
+ 667 006e 174A     		ldr	r2, .L68+4
+ARM GAS  /tmp/ccsdcRxX.s 			page 19
+
+
+ 668 0070 194B     		ldr	r3, .L68+16
+ 669 0072 10F1AA0F 		cmn	r0, #170
+ 670 0076 14BF     		ite	ne
+ 671 0078 1046     		movne	r0, r2
+ 672 007a 1846     		moveq	r0, r3
+ 673              	.LVL50:
+ 674              		.loc 1 223 9 view .LVU146
+ 675 007c 7047     		bx	lr
+ 676              	.LVL51:
+ 677              	.L44:
+ 216:libscpi/src/error.c ****     switch (err) {
+ 678              		.loc 1 216 5 view .LVU147
+ 679 007e 10F1640F 		cmn	r0, #100
+ 680 0082 04DA     		bge	.L54
+ 681 0084 10F1710F 		cmn	r0, #113
+ 682 0088 D5DA     		bge	.L55
+ 683              	.LVL52:
+ 684              	.L67:
+ 224:libscpi/src/error.c **** 
+ 225:libscpi/src/error.c **** #if USE_USER_ERROR_LIST
+ 226:libscpi/src/error.c ****         LIST_OF_USER_ERRORS
+ 227:libscpi/src/error.c **** #endif
+ 228:libscpi/src/error.c **** #undef X
+ 229:libscpi/src/error.c **** #undef XE
+ 230:libscpi/src/error.c ****         default: return "Unknown error";
+ 685              		.loc 1 230 25 view .LVU148
+ 686 008a 1048     		ldr	r0, .L68+4
+ 687 008c 7047     		bx	lr
+ 688              	.LVL53:
+ 689              	.L54:
+ 223:libscpi/src/error.c **** 
+ 690              		.loc 1 223 9 view .LVU149
+ 691 008e 0F4A     		ldr	r2, .L68+4
+ 692 0090 124B     		ldr	r3, .L68+20
+ 693 0092 0028     		cmp	r0, #0
+ 694 0094 14BF     		ite	ne
+ 695 0096 1046     		movne	r0, r2
+ 696 0098 1846     		moveq	r0, r3
+ 697              	.LVL54:
+ 223:libscpi/src/error.c **** 
+ 698              		.loc 1 223 9 view .LVU150
+ 699 009a 7047     		bx	lr
+ 700              	.L50:
+ 223:libscpi/src/error.c **** 
+ 701              		.loc 1 223 9 is_stmt 1 view .LVU151
+ 702 009c 1048     		ldr	r0, .L68+24
+ 703 009e 7047     		bx	lr
+ 704              	.L51:
+ 223:libscpi/src/error.c **** 
+ 705              		.loc 1 223 9 view .LVU152
+ 706 00a0 1048     		ldr	r0, .L68+28
+ 707 00a2 7047     		bx	lr
+ 708              	.L52:
+ 223:libscpi/src/error.c **** 
+ 709              		.loc 1 223 9 view .LVU153
+ 710 00a4 1048     		ldr	r0, .L68+32
+ 711 00a6 7047     		bx	lr
+ARM GAS  /tmp/ccsdcRxX.s 			page 20
+
+
+ 712              	.L53:
+ 223:libscpi/src/error.c **** 
+ 713              		.loc 1 223 9 view .LVU154
+ 714 00a8 1048     		ldr	r0, .L68+36
+ 715 00aa 7047     		bx	lr
+ 716              	.LVL55:
+ 717              	.L56:
+ 223:libscpi/src/error.c **** 
+ 718              		.loc 1 223 9 is_stmt 0 view .LVU155
+ 719 00ac 1048     		ldr	r0, .L68+40
+ 720              	.LVL56:
+ 223:libscpi/src/error.c **** 
+ 721              		.loc 1 223 9 view .LVU156
+ 722 00ae 7047     		bx	lr
+ 723              	.LVL57:
+ 724              	.L57:
+ 223:libscpi/src/error.c **** 
+ 725              		.loc 1 223 9 view .LVU157
+ 726 00b0 1048     		ldr	r0, .L68+44
+ 727              	.LVL58:
+ 223:libscpi/src/error.c **** 
+ 728              		.loc 1 223 9 view .LVU158
+ 729 00b2 7047     		bx	lr
+ 730              	.LVL59:
+ 731              	.L58:
+ 223:libscpi/src/error.c **** 
+ 732              		.loc 1 223 9 view .LVU159
+ 733 00b4 1048     		ldr	r0, .L68+48
+ 734              	.LVL60:
+ 223:libscpi/src/error.c **** 
+ 735              		.loc 1 223 9 view .LVU160
+ 736 00b6 7047     		bx	lr
+ 737              	.LVL61:
+ 738              	.L59:
+ 223:libscpi/src/error.c **** 
+ 739              		.loc 1 223 9 view .LVU161
+ 740 00b8 1048     		ldr	r0, .L68+52
+ 741              	.LVL62:
+ 223:libscpi/src/error.c **** 
+ 742              		.loc 1 223 9 view .LVU162
+ 743 00ba 7047     		bx	lr
+ 744              	.L61:
+ 745 00bc 1048     		ldr	r0, .L68+56
+ 746 00be 7047     		bx	lr
+ 747              	.LVL63:
+ 748              	.L63:
+ 223:libscpi/src/error.c **** 
+ 749              		.loc 1 223 9 view .LVU163
+ 750 00c0 1048     		ldr	r0, .L68+60
+ 751              	.LVL64:
+ 223:libscpi/src/error.c **** 
+ 752              		.loc 1 223 9 view .LVU164
+ 753 00c2 7047     		bx	lr
+ 754              	.LVL65:
+ 755              	.L64:
+ 223:libscpi/src/error.c **** 
+ 756              		.loc 1 223 9 view .LVU165
+ARM GAS  /tmp/ccsdcRxX.s 			page 21
+
+
+ 757 00c4 1048     		ldr	r0, .L68+64
+ 758              	.LVL66:
+ 231:libscpi/src/error.c ****     }
+ 232:libscpi/src/error.c **** }
+ 759              		.loc 1 232 1 view .LVU166
+ 760 00c6 7047     		bx	lr
+ 761              	.L69:
+ 762              		.align	2
+ 763              	.L68:
+ 764 00c8 7A000000 		.word	.LC7
+ 765 00cc 00000000 		.word	.LC0
+ 766 00d0 D7000000 		.word	.LC12
+ 767 00d4 9D000000 		.word	.LC9
+ 768 00d8 0E000000 		.word	.LC1
+ 769 00dc 1B010000 		.word	.LC16
+ 770 00e0 31000000 		.word	.LC3
+ 771 00e4 41000000 		.word	.LC4
+ 772 00e8 57000000 		.word	.LC5
+ 773 00ec 69000000 		.word	.LC6
+ 774 00f0 C8000000 		.word	.LC11
+ 775 00f4 E9000000 		.word	.LC13
+ 776 00f8 0E010000 		.word	.LC15
+ 777 00fc F9000000 		.word	.LC14
+ 778 0100 1F000000 		.word	.LC2
+ 779 0104 89000000 		.word	.LC8
+ 780 0108 B5000000 		.word	.LC10
+ 781              		.cfi_endproc
+ 782              	.LFE9:
+ 784              		.section	.rodata.errs,"a"
+ 785              		.align	1
+ 786              		.set	.LANCHOR0,. + 0
+ 789              	errs:
+ 790 0000 9CFF     		.short	-100
+ 791 0002 39FF     		.short	-199
+ 792 0004 2000     		.short	32
+ 793 0006 38FF     		.short	-200
+ 794 0008 D5FE     		.short	-299
+ 795 000a 1000     		.short	16
+ 796 000c D4FE     		.short	-300
+ 797 000e 71FE     		.short	-399
+ 798 0010 0800     		.short	8
+ 799 0012 0100     		.short	1
+ 800 0014 FF7F     		.short	32767
+ 801 0016 0800     		.short	8
+ 802 0018 70FE     		.short	-400
+ 803 001a 0DFE     		.short	-499
+ 804 001c 0400     		.short	4
+ 805 001e 0CFE     		.short	-500
+ 806 0020 A9FD     		.short	-599
+ 807 0022 8000     		.short	128
+ 808 0024 A8FD     		.short	-600
+ 809 0026 45FD     		.short	-699
+ 810 0028 4000     		.short	64
+ 811 002a 44FD     		.short	-700
+ 812 002c E1FC     		.short	-799
+ 813 002e 0200     		.short	2
+ 814 0030 E0FC     		.short	-800
+ARM GAS  /tmp/ccsdcRxX.s 			page 22
+
+
+ 815 0032 7DFC     		.short	-899
+ 816 0034 0100     		.short	1
+ 817              		.text
+ 818              	.Letext0:
+ 819              		.file 2 "/usr/lib/gcc/arm-none-eabi/9.2.1/include/stdint.h"
+ 820              		.file 3 "/usr/lib/gcc/arm-none-eabi/9.2.1/include/stddef.h"
+ 821              		.file 4 "/usr/include/newlib/sys/_types.h"
+ 822              		.file 5 "/usr/include/newlib/sys/reent.h"
+ 823              		.file 6 "/usr/include/newlib/sys/lock.h"
+ 824              		.file 7 "libscpi/inc/scpi/types.h"
+ 825              		.file 8 "libscpi/inc/scpi/parser.h"
+ 826              		.file 9 "libscpi/src/fifo_private.h"
+ 827              		.file 10 "libscpi/inc/scpi/ieee488.h"
+ 828              		.file 11 "libscpi/inc/scpi/error.h"
+ARM GAS  /tmp/ccsdcRxX.s 			page 23
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 error.c
+     /tmp/ccsdcRxX.s:18     .text.SCPI_ErrorEmit:0000000000000000 $t
+     /tmp/ccsdcRxX.s:25     .text.SCPI_ErrorEmit:0000000000000000 SCPI_ErrorEmit
+     /tmp/ccsdcRxX.s:87     .text.SCPI_ErrorInit:0000000000000000 $t
+     /tmp/ccsdcRxX.s:94     .text.SCPI_ErrorInit:0000000000000000 SCPI_ErrorInit
+     /tmp/ccsdcRxX.s:113    .text.SCPI_ErrorCount:0000000000000000 $t
+     /tmp/ccsdcRxX.s:120    .text.SCPI_ErrorCount:0000000000000000 SCPI_ErrorCount
+     /tmp/ccsdcRxX.s:156    .text.SCPI_ErrorEmitEmpty:0000000000000000 $t
+     /tmp/ccsdcRxX.s:162    .text.SCPI_ErrorEmitEmpty:0000000000000000 SCPI_ErrorEmitEmpty
+     /tmp/ccsdcRxX.s:251    .text.SCPI_ErrorClear:0000000000000000 $t
+     /tmp/ccsdcRxX.s:258    .text.SCPI_ErrorClear:0000000000000000 SCPI_ErrorClear
+     /tmp/ccsdcRxX.s:297    .text.SCPI_ErrorPop:0000000000000000 $t
+     /tmp/ccsdcRxX.s:304    .text.SCPI_ErrorPop:0000000000000000 SCPI_ErrorPop
+     /tmp/ccsdcRxX.s:358    .text.SCPI_ErrorPushEx:0000000000000000 $t
+     /tmp/ccsdcRxX.s:365    .text.SCPI_ErrorPushEx:0000000000000000 SCPI_ErrorPushEx
+     /tmp/ccsdcRxX.s:514    .text.SCPI_ErrorPushEx:0000000000000084 $d
+     /tmp/ccsdcRxX.s:520    .text.SCPI_ErrorPush:0000000000000000 $t
+     /tmp/ccsdcRxX.s:527    .text.SCPI_ErrorPush:0000000000000000 SCPI_ErrorPush
+     /tmp/ccsdcRxX.s:580    .text.SCPI_ErrorTranslate:0000000000000000 $t
+     /tmp/ccsdcRxX.s:587    .text.SCPI_ErrorTranslate:0000000000000000 SCPI_ErrorTranslate
+     /tmp/ccsdcRxX.s:629    .text.SCPI_ErrorTranslate:0000000000000040 $d
+     /tmp/ccsdcRxX.s:764    .text.SCPI_ErrorTranslate:00000000000000c8 $d
+     /tmp/ccsdcRxX.s:785    .rodata.errs:0000000000000000 $d
+     /tmp/ccsdcRxX.s:789    .rodata.errs:0000000000000000 errs
+     /tmp/ccsdcRxX.s:642    .text.SCPI_ErrorTranslate:000000000000004d $d
+     /tmp/ccsdcRxX.s:642    .text.SCPI_ErrorTranslate:000000000000004e $t
+
+UNDEFINED SYMBOLS
+SCPI_RegSetBits
+fifo_init
+fifo_count
+SCPI_RegGet
+SCPI_RegClearBits
+fifo_clear
+fifo_remove
+fifo_add
+fifo_remove_last

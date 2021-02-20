@@ -1,0 +1,487 @@
+ARM GAS  /tmp/ccNdOYxA.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"scpi-com.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.SCPI_Write,"ax",%progbits
+  18              		.align	1
+  19              		.global	SCPI_Write
+  20              		.arch armv7e-m
+  21              		.syntax unified
+  22              		.thumb
+  23              		.thumb_func
+  24              		.fpu fpv4-sp-d16
+  26              	SCPI_Write:
+  27              	.LVL0:
+  28              	.LFB3:
+  29              		.file 1 "Src/scpi-com.c"
+   1:Src/scpi-com.c **** /*-
+   2:Src/scpi-com.c ****  * BSD 2-Clause License
+   3:Src/scpi-com.c ****  *
+   4:Src/scpi-com.c ****  * Copyright (c) 2012-2018, Jan Breuer
+   5:Src/scpi-com.c ****  * All rights reserved.
+   6:Src/scpi-com.c ****  *
+   7:Src/scpi-com.c ****  * Redistribution and use in source and binary forms, with or without
+   8:Src/scpi-com.c ****  * modification, are permitted provided that the following conditions are met:
+   9:Src/scpi-com.c ****  *
+  10:Src/scpi-com.c ****  * * Redistributions of source code must retain the above copyright notice, this
+  11:Src/scpi-com.c ****  *   list of conditions and the following disclaimer.
+  12:Src/scpi-com.c ****  *
+  13:Src/scpi-com.c ****  * * Redistributions in binary form must reproduce the above copyright notice,
+  14:Src/scpi-com.c ****  *   this list of conditions and the following disclaimer in the documentation
+  15:Src/scpi-com.c ****  *   and/or other materials provided with the distribution.
+  16:Src/scpi-com.c ****  *
+  17:Src/scpi-com.c ****  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  18:Src/scpi-com.c ****  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  19:Src/scpi-com.c ****  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+  20:Src/scpi-com.c ****  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+  21:Src/scpi-com.c ****  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  22:Src/scpi-com.c ****  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  23:Src/scpi-com.c ****  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+  24:Src/scpi-com.c ****  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  25:Src/scpi-com.c ****  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  26:Src/scpi-com.c ****  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  27:Src/scpi-com.c ****  */
+  28:Src/scpi-com.c **** 
+  29:Src/scpi-com.c ****  #include <stdio.h>
+ARM GAS  /tmp/ccNdOYxA.s 			page 2
+
+
+  30:Src/scpi-com.c ****  #include <stdlib.h>
+  31:Src/scpi-com.c ****  #include <string.h>
+  32:Src/scpi-com.c ****  #include "scpi/scpi.h"
+  33:Src/scpi-com.c ****  #include "scpi-def.h"
+  34:Src/scpi-com.c **** 
+  35:Src/scpi-com.c **** size_t SCPI_Write(scpi_t * context, const char * data, size_t len) {
+  30              		.loc 1 35 68 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 0
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		.loc 1 35 68 is_stmt 0 view .LVU1
+  35 0000 38B5     		push	{r3, r4, r5, lr}
+  36              	.LCFI0:
+  37              		.cfi_def_cfa_offset 16
+  38              		.cfi_offset 3, -16
+  39              		.cfi_offset 4, -12
+  40              		.cfi_offset 5, -8
+  41              		.cfi_offset 14, -4
+  42 0002 0C46     		mov	r4, r1
+  43 0004 1546     		mov	r5, r2
+  36:Src/scpi-com.c ****     (void) context;
+  44              		.loc 1 36 5 is_stmt 1 view .LVU2
+  37:Src/scpi-com.c **** 
+  38:Src/scpi-com.c ****     while (CDC_Transmit_FS(data, len));
+  45              		.loc 1 38 5 view .LVU3
+  46              	.LVL1:
+  47              	.L2:
+  48              	.LBB2:
+  49              		.loc 1 38 39 discriminator 1 view .LVU4
+  50              		.loc 1 38 11 discriminator 1 view .LVU5
+  51              		.loc 1 38 12 is_stmt 0 discriminator 1 view .LVU6
+  52 0006 2946     		mov	r1, r5
+  53 0008 2046     		mov	r0, r4
+  54 000a FFF7FEFF 		bl	CDC_Transmit_FS
+  55              	.LVL2:
+  56              		.loc 1 38 11 discriminator 1 view .LVU7
+  57 000e 0028     		cmp	r0, #0
+  58 0010 F9D1     		bne	.L2
+  59              	.LBE2:
+  39:Src/scpi-com.c ****     return SCPI_RES_OK;
+  60              		.loc 1 39 5 is_stmt 1 view .LVU8
+  40:Src/scpi-com.c **** }
+  61              		.loc 1 40 1 is_stmt 0 view .LVU9
+  62 0012 0120     		movs	r0, #1
+  63 0014 38BD     		pop	{r3, r4, r5, pc}
+  64              		.loc 1 40 1 view .LVU10
+  65              		.cfi_endproc
+  66              	.LFE3:
+  68              		.section	.text.SCPI_Flush,"ax",%progbits
+  69              		.align	1
+  70              		.global	SCPI_Flush
+  71              		.syntax unified
+  72              		.thumb
+  73              		.thumb_func
+  74              		.fpu fpv4-sp-d16
+  76              	SCPI_Flush:
+  77              	.LVL3:
+ARM GAS  /tmp/ccNdOYxA.s 			page 3
+
+
+  78              	.LFB4:
+  41:Src/scpi-com.c **** 
+  42:Src/scpi-com.c **** scpi_result_t SCPI_Flush(scpi_t * context) {
+  79              		.loc 1 42 44 is_stmt 1 view -0
+  80              		.cfi_startproc
+  81              		@ args = 0, pretend = 0, frame = 0
+  82              		@ frame_needed = 0, uses_anonymous_args = 0
+  83              		@ link register save eliminated.
+  43:Src/scpi-com.c ****     (void) context;
+  84              		.loc 1 43 5 view .LVU12
+  44:Src/scpi-com.c ****     return SCPI_RES_OK;
+  85              		.loc 1 44 5 view .LVU13
+  45:Src/scpi-com.c **** }
+  86              		.loc 1 45 1 is_stmt 0 view .LVU14
+  87 0000 0120     		movs	r0, #1
+  88              	.LVL4:
+  89              		.loc 1 45 1 view .LVU15
+  90 0002 7047     		bx	lr
+  91              		.cfi_endproc
+  92              	.LFE4:
+  94              		.section	.rodata.SCPI_Error.str1.1,"aMS",%progbits,1
+  95              	.LC0:
+  96 0000 2A2A4552 		.ascii	"**ERROR: %d, \"%s\"\015\012\000"
+  96      524F523A 
+  96      2025642C 
+  96      20222573 
+  96      220D0A00 
+  97              		.section	.text.SCPI_Error,"ax",%progbits
+  98              		.align	1
+  99              		.global	SCPI_Error
+ 100              		.syntax unified
+ 101              		.thumb
+ 102              		.thumb_func
+ 103              		.fpu fpv4-sp-d16
+ 105              	SCPI_Error:
+ 106              	.LVL5:
+ 107              	.LFB5:
+  46:Src/scpi-com.c **** 
+  47:Src/scpi-com.c **** int SCPI_Error(scpi_t * context, int_fast16_t err) {
+ 108              		.loc 1 47 52 is_stmt 1 view -0
+ 109              		.cfi_startproc
+ 110              		@ args = 0, pretend = 0, frame = 64
+ 111              		@ frame_needed = 0, uses_anonymous_args = 0
+  48:Src/scpi-com.c ****     (void) context;
+ 112              		.loc 1 48 5 view .LVU17
+  49:Src/scpi-com.c ****     char _err[50];
+ 113              		.loc 1 49 5 view .LVU18
+  50:Src/scpi-com.c ****     sprintf(_err, "**ERROR: %d, \"%s\"\r\n", (int16_t) err, SCPI_ErrorTranslate(err));
+ 114              		.loc 1 50 5 view .LVU19
+  47:Src/scpi-com.c ****     (void) context;
+ 115              		.loc 1 47 52 is_stmt 0 view .LVU20
+ 116 0000 00B5     		push	{lr}
+ 117              	.LCFI1:
+ 118              		.cfi_def_cfa_offset 4
+ 119              		.cfi_offset 14, -4
+ 120              		.loc 1 50 46 view .LVU21
+ 121 0002 0AB2     		sxth	r2, r1
+ARM GAS  /tmp/ccNdOYxA.s 			page 4
+
+
+  47:Src/scpi-com.c ****     (void) context;
+ 122              		.loc 1 47 52 view .LVU22
+ 123 0004 91B0     		sub	sp, sp, #68
+ 124              	.LCFI2:
+ 125              		.cfi_def_cfa_offset 72
+ 126              		.loc 1 50 5 view .LVU23
+ 127 0006 1046     		mov	r0, r2
+ 128              	.LVL6:
+ 129              		.loc 1 50 5 view .LVU24
+ 130 0008 0192     		str	r2, [sp, #4]
+ 131 000a FFF7FEFF 		bl	SCPI_ErrorTranslate
+ 132              	.LVL7:
+ 133              		.loc 1 50 5 view .LVU25
+ 134 000e 019A     		ldr	r2, [sp, #4]
+ 135 0010 0649     		ldr	r1, .L6
+ 136 0012 0346     		mov	r3, r0
+ 137 0014 03A8     		add	r0, sp, #12
+ 138 0016 FFF7FEFF 		bl	sprintf
+ 139              	.LVL8:
+  51:Src/scpi-com.c ****     CDC_Transmit_FS(_err, 50);
+ 140              		.loc 1 51 5 is_stmt 1 view .LVU26
+ 141 001a 3221     		movs	r1, #50
+ 142 001c 03A8     		add	r0, sp, #12
+ 143 001e FFF7FEFF 		bl	CDC_Transmit_FS
+ 144              	.LVL9:
+  52:Src/scpi-com.c ****     return 0;
+ 145              		.loc 1 52 5 view .LVU27
+  53:Src/scpi-com.c **** }
+ 146              		.loc 1 53 1 is_stmt 0 view .LVU28
+ 147 0022 0020     		movs	r0, #0
+ 148 0024 11B0     		add	sp, sp, #68
+ 149              	.LCFI3:
+ 150              		.cfi_def_cfa_offset 4
+ 151              		@ sp needed
+ 152 0026 5DF804FB 		ldr	pc, [sp], #4
+ 153              	.L7:
+ 154 002a 00BF     		.align	2
+ 155              	.L6:
+ 156 002c 00000000 		.word	.LC0
+ 157              		.cfi_endproc
+ 158              	.LFE5:
+ 160              		.section	.rodata.SCPI_Control.str1.1,"aMS",%progbits,1
+ 161              	.LC1:
+ 162 0000 2A2A5352 		.ascii	"**SRQ: 0x%X (%d)\015\012\000"
+ 162      513A2030 
+ 162      78255820 
+ 162      28256429 
+ 162      0D0A00
+ 163              	.LC2:
+ 164 0013 2A2A4354 		.ascii	"**CTRL %02x: 0x%X (%d)\015\012\000"
+ 164      524C2025 
+ 164      3032783A 
+ 164      20307825 
+ 164      58202825 
+ 165              		.section	.text.SCPI_Control,"ax",%progbits
+ 166              		.align	1
+ 167              		.global	SCPI_Control
+ARM GAS  /tmp/ccNdOYxA.s 			page 5
+
+
+ 168              		.syntax unified
+ 169              		.thumb
+ 170              		.thumb_func
+ 171              		.fpu fpv4-sp-d16
+ 173              	SCPI_Control:
+ 174              	.LVL10:
+ 175              	.LFB6:
+  54:Src/scpi-com.c **** 
+  55:Src/scpi-com.c **** scpi_result_t SCPI_Control(scpi_t * context, scpi_ctrl_name_t ctrl, scpi_reg_val_t val) {
+ 176              		.loc 1 55 89 is_stmt 1 view -0
+ 177              		.cfi_startproc
+ 178              		@ args = 0, pretend = 0, frame = 56
+ 179              		@ frame_needed = 0, uses_anonymous_args = 0
+  56:Src/scpi-com.c ****     (void) context;
+ 180              		.loc 1 56 5 view .LVU30
+  57:Src/scpi-com.c ****     char _err[50];
+ 181              		.loc 1 57 5 view .LVU31
+  58:Src/scpi-com.c ****     if (SCPI_CTRL_SRQ == ctrl) {
+ 182              		.loc 1 58 5 view .LVU32
+  55:Src/scpi-com.c ****     (void) context;
+ 183              		.loc 1 55 89 is_stmt 0 view .LVU33
+ 184 0000 00B5     		push	{lr}
+ 185              	.LCFI4:
+ 186              		.cfi_def_cfa_offset 4
+ 187              		.cfi_offset 14, -4
+ 188              		.loc 1 58 8 view .LVU34
+ 189 0002 0129     		cmp	r1, #1
+  55:Src/scpi-com.c ****     (void) context;
+ 190              		.loc 1 55 89 view .LVU35
+ 191 0004 91B0     		sub	sp, sp, #68
+ 192              	.LCFI5:
+ 193              		.cfi_def_cfa_offset 72
+  55:Src/scpi-com.c ****     (void) context;
+ 194              		.loc 1 55 89 view .LVU36
+ 195 0006 1346     		mov	r3, r2
+ 196              		.loc 1 58 8 view .LVU37
+ 197 0008 0BD1     		bne	.L9
+  59:Src/scpi-com.c ****         sprintf(_err, "**SRQ: 0x%X (%d)\r\n", val, val);
+ 198              		.loc 1 59 9 is_stmt 1 view .LVU38
+ 199 000a 0949     		ldr	r1, .L11
+ 200              	.LVL11:
+ 201              		.loc 1 59 9 is_stmt 0 view .LVU39
+ 202 000c 03A8     		add	r0, sp, #12
+ 203              	.LVL12:
+ 204              		.loc 1 59 9 view .LVU40
+ 205 000e FFF7FEFF 		bl	sprintf
+ 206              	.LVL13:
+ 207              	.L10:
+  60:Src/scpi-com.c ****     } else {
+  61:Src/scpi-com.c ****         sprintf(_err, "**CTRL %02x: 0x%X (%d)\r\n", ctrl, val, val);
+  62:Src/scpi-com.c ****     }
+  63:Src/scpi-com.c ****     CDC_Transmit_FS(_err, 50);
+ 208              		.loc 1 63 5 is_stmt 1 view .LVU41
+ 209 0012 3221     		movs	r1, #50
+ 210 0014 03A8     		add	r0, sp, #12
+ 211 0016 FFF7FEFF 		bl	CDC_Transmit_FS
+ 212              	.LVL14:
+ARM GAS  /tmp/ccNdOYxA.s 			page 6
+
+
+  64:Src/scpi-com.c ****     return SCPI_RES_OK;
+ 213              		.loc 1 64 5 view .LVU42
+  65:Src/scpi-com.c **** }
+ 214              		.loc 1 65 1 is_stmt 0 view .LVU43
+ 215 001a 0120     		movs	r0, #1
+ 216 001c 11B0     		add	sp, sp, #68
+ 217              	.LCFI6:
+ 218              		.cfi_remember_state
+ 219              		.cfi_def_cfa_offset 4
+ 220              		@ sp needed
+ 221 001e 5DF804FB 		ldr	pc, [sp], #4
+ 222              	.LVL15:
+ 223              	.L9:
+ 224              	.LCFI7:
+ 225              		.cfi_restore_state
+  61:Src/scpi-com.c ****     }
+ 226              		.loc 1 61 9 is_stmt 1 view .LVU44
+ 227 0022 0092     		str	r2, [sp]
+ 228 0024 03A8     		add	r0, sp, #12
+ 229              	.LVL16:
+  61:Src/scpi-com.c ****     }
+ 230              		.loc 1 61 9 is_stmt 0 view .LVU45
+ 231 0026 0A46     		mov	r2, r1
+ 232              	.LVL17:
+  61:Src/scpi-com.c ****     }
+ 233              		.loc 1 61 9 view .LVU46
+ 234 0028 0249     		ldr	r1, .L11+4
+ 235              	.LVL18:
+  61:Src/scpi-com.c ****     }
+ 236              		.loc 1 61 9 view .LVU47
+ 237 002a FFF7FEFF 		bl	sprintf
+ 238              	.LVL19:
+ 239 002e F0E7     		b	.L10
+ 240              	.L12:
+ 241              		.align	2
+ 242              	.L11:
+ 243 0030 00000000 		.word	.LC1
+ 244 0034 13000000 		.word	.LC2
+ 245              		.cfi_endproc
+ 246              	.LFE6:
+ 248              		.section	.rodata.SCPI_Reset.str1.1,"aMS",%progbits,1
+ 249              	.LC3:
+ 250 0000 2A2A5265 		.ascii	"**Reset\015\012\000"
+ 250      7365740D 
+ 250      0A00
+ 251              		.section	.text.SCPI_Reset,"ax",%progbits
+ 252              		.align	1
+ 253              		.global	SCPI_Reset
+ 254              		.syntax unified
+ 255              		.thumb
+ 256              		.thumb_func
+ 257              		.fpu fpv4-sp-d16
+ 259              	SCPI_Reset:
+ 260              	.LVL20:
+ 261              	.LFB7:
+  66:Src/scpi-com.c **** 
+  67:Src/scpi-com.c **** scpi_result_t SCPI_Reset(scpi_t * context) {
+ARM GAS  /tmp/ccNdOYxA.s 			page 7
+
+
+ 262              		.loc 1 67 44 is_stmt 1 view -0
+ 263              		.cfi_startproc
+ 264              		@ args = 0, pretend = 0, frame = 56
+ 265              		@ frame_needed = 0, uses_anonymous_args = 0
+  68:Src/scpi-com.c ****     (void) context;
+ 266              		.loc 1 68 5 view .LVU49
+  69:Src/scpi-com.c ****     char _err[50];
+ 267              		.loc 1 69 5 view .LVU50
+  70:Src/scpi-com.c ****     sprintf(_err, "**Reset\r\n");
+ 268              		.loc 1 70 5 view .LVU51
+  67:Src/scpi-com.c ****     (void) context;
+ 269              		.loc 1 67 44 is_stmt 0 view .LVU52
+ 270 0000 00B5     		push	{lr}
+ 271              	.LCFI8:
+ 272              		.cfi_def_cfa_offset 4
+ 273              		.cfi_offset 14, -4
+ 274 0002 8FB0     		sub	sp, sp, #60
+ 275              	.LCFI9:
+ 276              		.cfi_def_cfa_offset 64
+ 277              		.loc 1 70 5 view .LVU53
+ 278 0004 0549     		ldr	r1, .L14
+ 279 0006 01A8     		add	r0, sp, #4
+ 280              	.LVL21:
+ 281              		.loc 1 70 5 view .LVU54
+ 282 0008 FFF7FEFF 		bl	strcpy
+ 283              	.LVL22:
+  71:Src/scpi-com.c ****     CDC_Transmit_FS(_err, 50);
+ 284              		.loc 1 71 5 is_stmt 1 view .LVU55
+ 285 000c 3221     		movs	r1, #50
+ 286 000e 01A8     		add	r0, sp, #4
+ 287 0010 FFF7FEFF 		bl	CDC_Transmit_FS
+ 288              	.LVL23:
+  72:Src/scpi-com.c ****     return SCPI_RES_OK;
+ 289              		.loc 1 72 5 view .LVU56
+  73:Src/scpi-com.c **** }
+ 290              		.loc 1 73 1 is_stmt 0 view .LVU57
+ 291 0014 0120     		movs	r0, #1
+ 292 0016 0FB0     		add	sp, sp, #60
+ 293              	.LCFI10:
+ 294              		.cfi_def_cfa_offset 4
+ 295              		@ sp needed
+ 296 0018 5DF804FB 		ldr	pc, [sp], #4
+ 297              	.L15:
+ 298              		.align	2
+ 299              	.L14:
+ 300 001c 00000000 		.word	.LC3
+ 301              		.cfi_endproc
+ 302              	.LFE7:
+ 304              		.section	.text.SCPI_SystemCommTcpipControlQ,"ax",%progbits
+ 305              		.align	1
+ 306              		.global	SCPI_SystemCommTcpipControlQ
+ 307              		.syntax unified
+ 308              		.thumb
+ 309              		.thumb_func
+ 310              		.fpu fpv4-sp-d16
+ 312              	SCPI_SystemCommTcpipControlQ:
+ 313              	.LVL24:
+ARM GAS  /tmp/ccNdOYxA.s 			page 8
+
+
+ 314              	.LFB8:
+  74:Src/scpi-com.c **** 
+  75:Src/scpi-com.c **** scpi_result_t SCPI_SystemCommTcpipControlQ(scpi_t * context) {
+ 315              		.loc 1 75 62 is_stmt 1 view -0
+ 316              		.cfi_startproc
+ 317              		@ args = 0, pretend = 0, frame = 0
+ 318              		@ frame_needed = 0, uses_anonymous_args = 0
+ 319              		@ link register save eliminated.
+  76:Src/scpi-com.c ****     (void) context;
+ 320              		.loc 1 76 5 view .LVU59
+  77:Src/scpi-com.c **** 
+  78:Src/scpi-com.c ****     return SCPI_RES_ERR;
+ 321              		.loc 1 78 5 view .LVU60
+  79:Src/scpi-com.c **** }
+ 322              		.loc 1 79 1 is_stmt 0 view .LVU61
+ 323 0000 4FF0FF30 		mov	r0, #-1
+ 324              	.LVL25:
+ 325              		.loc 1 79 1 view .LVU62
+ 326 0004 7047     		bx	lr
+ 327              		.cfi_endproc
+ 328              	.LFE8:
+ 330              		.text
+ 331              	.Letext0:
+ 332              		.file 2 "/usr/include/newlib/machine/_default_types.h"
+ 333              		.file 3 "/usr/lib/gcc/arm-none-eabi/9.2.1/include/stddef.h"
+ 334              		.file 4 "/usr/include/newlib/sys/_types.h"
+ 335              		.file 5 "/usr/include/newlib/sys/reent.h"
+ 336              		.file 6 "/usr/include/newlib/sys/lock.h"
+ 337              		.file 7 "/usr/include/newlib/sys/_stdint.h"
+ 338              		.file 8 "/usr/include/newlib/stdlib.h"
+ 339              		.file 9 "/usr/lib/gcc/arm-none-eabi/9.2.1/include/stdint.h"
+ 340              		.file 10 "libscpi/inc/scpi/types.h"
+ 341              		.file 11 "libscpi/inc/scpi/parser.h"
+ 342              		.file 12 "libscpi/inc/scpi/units.h"
+ 343              		.file 13 "Inc/scpi-def.h"
+ 344              		.file 14 "/usr/include/newlib/stdio.h"
+ 345              		.file 15 "libscpi/inc/scpi/error.h"
+ 346              		.file 16 "<built-in>"
+ARM GAS  /tmp/ccNdOYxA.s 			page 9
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 scpi-com.c
+     /tmp/ccNdOYxA.s:18     .text.SCPI_Write:0000000000000000 $t
+     /tmp/ccNdOYxA.s:26     .text.SCPI_Write:0000000000000000 SCPI_Write
+     /tmp/ccNdOYxA.s:69     .text.SCPI_Flush:0000000000000000 $t
+     /tmp/ccNdOYxA.s:76     .text.SCPI_Flush:0000000000000000 SCPI_Flush
+     /tmp/ccNdOYxA.s:98     .text.SCPI_Error:0000000000000000 $t
+     /tmp/ccNdOYxA.s:105    .text.SCPI_Error:0000000000000000 SCPI_Error
+     /tmp/ccNdOYxA.s:156    .text.SCPI_Error:000000000000002c $d
+     /tmp/ccNdOYxA.s:166    .text.SCPI_Control:0000000000000000 $t
+     /tmp/ccNdOYxA.s:173    .text.SCPI_Control:0000000000000000 SCPI_Control
+     /tmp/ccNdOYxA.s:243    .text.SCPI_Control:0000000000000030 $d
+     /tmp/ccNdOYxA.s:252    .text.SCPI_Reset:0000000000000000 $t
+     /tmp/ccNdOYxA.s:259    .text.SCPI_Reset:0000000000000000 SCPI_Reset
+     /tmp/ccNdOYxA.s:300    .text.SCPI_Reset:000000000000001c $d
+     /tmp/ccNdOYxA.s:305    .text.SCPI_SystemCommTcpipControlQ:0000000000000000 $t
+     /tmp/ccNdOYxA.s:312    .text.SCPI_SystemCommTcpipControlQ:0000000000000000 SCPI_SystemCommTcpipControlQ
+
+UNDEFINED SYMBOLS
+CDC_Transmit_FS
+SCPI_ErrorTranslate
+sprintf
+strcpy

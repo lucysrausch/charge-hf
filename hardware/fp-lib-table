@@ -1,0 +1,4 @@
+(fp_lib_table
+  (lib (name otter)(type KiCad)(uri /home/niklas/kicad/KiCAD-libs/otter.pretty)(options "")(descr ""))
+  (lib (name airfuel_poc)(type KiCad)(uri /home/niklas/kicad/airfuel_poc)(options "")(descr ""))
+)

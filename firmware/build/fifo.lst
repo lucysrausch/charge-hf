@@ -1,0 +1,648 @@
+ARM GAS  /tmp/ccyR7gzH.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"fifo.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.fifo_init,"ax",%progbits
+  18              		.align	1
+  19              		.global	fifo_init
+  20              		.hidden	fifo_init
+  21              		.arch armv7e-m
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  25              		.fpu fpv4-sp-d16
+  27              	fifo_init:
+  28              	.LVL0:
+  29              	.LFB0:
+  30              		.file 1 "libscpi/src/fifo.c"
+   1:libscpi/src/fifo.c **** /*-
+   2:libscpi/src/fifo.c ****  * BSD 2-Clause License
+   3:libscpi/src/fifo.c ****  *
+   4:libscpi/src/fifo.c ****  * Copyright (c) 2012-2018, Jan Breuer
+   5:libscpi/src/fifo.c ****  * All rights reserved.
+   6:libscpi/src/fifo.c ****  *
+   7:libscpi/src/fifo.c ****  * Redistribution and use in source and binary forms, with or without
+   8:libscpi/src/fifo.c ****  * modification, are permitted provided that the following conditions are met:
+   9:libscpi/src/fifo.c ****  *
+  10:libscpi/src/fifo.c ****  * * Redistributions of source code must retain the above copyright notice, this
+  11:libscpi/src/fifo.c ****  *   list of conditions and the following disclaimer.
+  12:libscpi/src/fifo.c ****  *
+  13:libscpi/src/fifo.c ****  * * Redistributions in binary form must reproduce the above copyright notice,
+  14:libscpi/src/fifo.c ****  *   this list of conditions and the following disclaimer in the documentation
+  15:libscpi/src/fifo.c ****  *   and/or other materials provided with the distribution.
+  16:libscpi/src/fifo.c ****  *
+  17:libscpi/src/fifo.c ****  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  18:libscpi/src/fifo.c ****  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  19:libscpi/src/fifo.c ****  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+  20:libscpi/src/fifo.c ****  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+  21:libscpi/src/fifo.c ****  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  22:libscpi/src/fifo.c ****  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  23:libscpi/src/fifo.c ****  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+  24:libscpi/src/fifo.c ****  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  25:libscpi/src/fifo.c ****  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  26:libscpi/src/fifo.c ****  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  27:libscpi/src/fifo.c ****  */
+  28:libscpi/src/fifo.c **** 
+ARM GAS  /tmp/ccyR7gzH.s 			page 2
+
+
+  29:libscpi/src/fifo.c **** #include "fifo_private.h"
+  30:libscpi/src/fifo.c **** 
+  31:libscpi/src/fifo.c **** /**
+  32:libscpi/src/fifo.c ****  * Initialize fifo
+  33:libscpi/src/fifo.c ****  * @param fifo
+  34:libscpi/src/fifo.c ****  */
+  35:libscpi/src/fifo.c **** void fifo_init(scpi_fifo_t * fifo, scpi_error_t * data, int16_t size) {
+  31              		.loc 1 35 71 view -0
+  32              		.cfi_startproc
+  33              		@ args = 0, pretend = 0, frame = 0
+  34              		@ frame_needed = 0, uses_anonymous_args = 0
+  35              		@ link register save eliminated.
+  36:libscpi/src/fifo.c ****     fifo->wr = 0;
+  36              		.loc 1 36 5 view .LVU1
+  37:libscpi/src/fifo.c ****     fifo->rd = 0;
+  37              		.loc 1 37 5 view .LVU2
+  38:libscpi/src/fifo.c ****     fifo->count = 0;
+  38              		.loc 1 38 5 view .LVU3
+  36:libscpi/src/fifo.c ****     fifo->wr = 0;
+  39              		.loc 1 36 14 is_stmt 0 view .LVU4
+  40 0000 0023     		movs	r3, #0
+  41 0002 0360     		str	r3, [r0]
+  42              		.loc 1 38 17 view .LVU5
+  43 0004 8380     		strh	r3, [r0, #4]	@ movhi
+  39:libscpi/src/fifo.c ****     fifo->data = data;
+  44              		.loc 1 39 5 is_stmt 1 view .LVU6
+  45              		.loc 1 39 16 is_stmt 0 view .LVU7
+  46 0006 8160     		str	r1, [r0, #8]
+  40:libscpi/src/fifo.c ****     fifo->size = size;
+  47              		.loc 1 40 5 is_stmt 1 view .LVU8
+  48              		.loc 1 40 16 is_stmt 0 view .LVU9
+  49 0008 C280     		strh	r2, [r0, #6]	@ movhi
+  41:libscpi/src/fifo.c **** }
+  50              		.loc 1 41 1 view .LVU10
+  51 000a 7047     		bx	lr
+  52              		.cfi_endproc
+  53              	.LFE0:
+  55              		.section	.text.fifo_clear,"ax",%progbits
+  56              		.align	1
+  57              		.global	fifo_clear
+  58              		.hidden	fifo_clear
+  59              		.syntax unified
+  60              		.thumb
+  61              		.thumb_func
+  62              		.fpu fpv4-sp-d16
+  64              	fifo_clear:
+  65              	.LVL1:
+  66              	.LFB1:
+  42:libscpi/src/fifo.c **** 
+  43:libscpi/src/fifo.c **** /**
+  44:libscpi/src/fifo.c ****  * Empty fifo
+  45:libscpi/src/fifo.c ****  * @param fifo
+  46:libscpi/src/fifo.c ****  */
+  47:libscpi/src/fifo.c **** void fifo_clear(scpi_fifo_t * fifo) {
+  67              		.loc 1 47 37 is_stmt 1 view -0
+  68              		.cfi_startproc
+  69              		@ args = 0, pretend = 0, frame = 0
+ARM GAS  /tmp/ccyR7gzH.s 			page 3
+
+
+  70              		@ frame_needed = 0, uses_anonymous_args = 0
+  71              		@ link register save eliminated.
+  48:libscpi/src/fifo.c ****     fifo->wr = 0;
+  72              		.loc 1 48 5 view .LVU12
+  49:libscpi/src/fifo.c ****     fifo->rd = 0;
+  73              		.loc 1 49 5 view .LVU13
+  50:libscpi/src/fifo.c ****     fifo->count = 0;
+  74              		.loc 1 50 5 view .LVU14
+  48:libscpi/src/fifo.c ****     fifo->wr = 0;
+  75              		.loc 1 48 14 is_stmt 0 view .LVU15
+  76 0000 0023     		movs	r3, #0
+  77 0002 0360     		str	r3, [r0]
+  78              		.loc 1 50 17 view .LVU16
+  79 0004 8380     		strh	r3, [r0, #4]	@ movhi
+  51:libscpi/src/fifo.c **** }
+  80              		.loc 1 51 1 view .LVU17
+  81 0006 7047     		bx	lr
+  82              		.cfi_endproc
+  83              	.LFE1:
+  85              		.section	.text.fifo_is_empty,"ax",%progbits
+  86              		.align	1
+  87              		.global	fifo_is_empty
+  88              		.hidden	fifo_is_empty
+  89              		.syntax unified
+  90              		.thumb
+  91              		.thumb_func
+  92              		.fpu fpv4-sp-d16
+  94              	fifo_is_empty:
+  95              	.LVL2:
+  96              	.LFB2:
+  52:libscpi/src/fifo.c **** 
+  53:libscpi/src/fifo.c **** /**
+  54:libscpi/src/fifo.c ****  * Test if fifo is empty
+  55:libscpi/src/fifo.c ****  * @param fifo
+  56:libscpi/src/fifo.c ****  * @return
+  57:libscpi/src/fifo.c ****  */
+  58:libscpi/src/fifo.c **** scpi_bool_t fifo_is_empty(scpi_fifo_t * fifo) {
+  97              		.loc 1 58 47 is_stmt 1 view -0
+  98              		.cfi_startproc
+  99              		@ args = 0, pretend = 0, frame = 0
+ 100              		@ frame_needed = 0, uses_anonymous_args = 0
+ 101              		@ link register save eliminated.
+  59:libscpi/src/fifo.c ****     return fifo->count == 0;
+ 102              		.loc 1 59 5 view .LVU19
+ 103              		.loc 1 59 24 is_stmt 0 view .LVU20
+ 104 0000 B0F90400 		ldrsh	r0, [r0, #4]
+ 105              	.LVL3:
+  60:libscpi/src/fifo.c **** }
+ 106              		.loc 1 60 1 view .LVU21
+ 107 0004 B0FA80F0 		clz	r0, r0
+ 108 0008 4009     		lsrs	r0, r0, #5
+ 109 000a 7047     		bx	lr
+ 110              		.cfi_endproc
+ 111              	.LFE2:
+ 113              		.section	.text.fifo_is_full,"ax",%progbits
+ 114              		.align	1
+ 115              		.global	fifo_is_full
+ARM GAS  /tmp/ccyR7gzH.s 			page 4
+
+
+ 116              		.hidden	fifo_is_full
+ 117              		.syntax unified
+ 118              		.thumb
+ 119              		.thumb_func
+ 120              		.fpu fpv4-sp-d16
+ 122              	fifo_is_full:
+ 123              	.LVL4:
+ 124              	.LFB3:
+  61:libscpi/src/fifo.c **** 
+  62:libscpi/src/fifo.c **** /**
+  63:libscpi/src/fifo.c ****  * Test if fifo is full
+  64:libscpi/src/fifo.c ****  * @param fifo
+  65:libscpi/src/fifo.c ****  * @return
+  66:libscpi/src/fifo.c ****  */
+  67:libscpi/src/fifo.c **** scpi_bool_t fifo_is_full(scpi_fifo_t * fifo) {
+ 125              		.loc 1 67 46 is_stmt 1 view -0
+ 126              		.cfi_startproc
+ 127              		@ args = 0, pretend = 0, frame = 0
+ 128              		@ frame_needed = 0, uses_anonymous_args = 0
+ 129              		@ link register save eliminated.
+  68:libscpi/src/fifo.c ****     return fifo->count == fifo->size;
+ 130              		.loc 1 68 5 view .LVU23
+ 131              		.loc 1 68 24 is_stmt 0 view .LVU24
+ 132 0000 B0F90420 		ldrsh	r2, [r0, #4]
+ 133 0004 B0F90600 		ldrsh	r0, [r0, #6]
+ 134              	.LVL5:
+  69:libscpi/src/fifo.c **** }
+ 135              		.loc 1 69 1 view .LVU25
+ 136 0008 131A     		subs	r3, r2, r0
+ 137 000a 5842     		rsbs	r0, r3, #0
+ 138 000c 5841     		adcs	r0, r0, r3
+ 139 000e 7047     		bx	lr
+ 140              		.cfi_endproc
+ 141              	.LFE3:
+ 143              		.section	.text.fifo_add,"ax",%progbits
+ 144              		.align	1
+ 145              		.global	fifo_add
+ 146              		.hidden	fifo_add
+ 147              		.syntax unified
+ 148              		.thumb
+ 149              		.thumb_func
+ 150              		.fpu fpv4-sp-d16
+ 152              	fifo_add:
+ 153              	.LVL6:
+ 154              	.LFB4:
+  70:libscpi/src/fifo.c **** 
+  71:libscpi/src/fifo.c **** /**
+  72:libscpi/src/fifo.c ****  * Add element to fifo. If fifo is full, return FALSE.
+  73:libscpi/src/fifo.c ****  * @param fifo
+  74:libscpi/src/fifo.c ****  * @param err
+  75:libscpi/src/fifo.c ****  * @param info
+  76:libscpi/src/fifo.c ****  * @return
+  77:libscpi/src/fifo.c ****  */
+  78:libscpi/src/fifo.c **** scpi_bool_t fifo_add(scpi_fifo_t * fifo, const scpi_error_t * value) {
+ 155              		.loc 1 78 70 is_stmt 1 view -0
+ 156              		.cfi_startproc
+ 157              		@ args = 0, pretend = 0, frame = 0
+ARM GAS  /tmp/ccyR7gzH.s 			page 5
+
+
+ 158              		@ frame_needed = 0, uses_anonymous_args = 0
+  79:libscpi/src/fifo.c ****     /* FIFO full? */
+  80:libscpi/src/fifo.c ****     if (fifo_is_full(fifo)) {
+ 159              		.loc 1 80 5 view .LVU27
+ 160              	.LBB8:
+ 161              	.LBI8:
+  67:libscpi/src/fifo.c ****     return fifo->count == fifo->size;
+ 162              		.loc 1 67 13 view .LVU28
+ 163              	.LBB9:
+  68:libscpi/src/fifo.c **** }
+ 164              		.loc 1 68 5 view .LVU29
+ 165              	.LBE9:
+ 166              	.LBE8:
+  78:libscpi/src/fifo.c ****     /* FIFO full? */
+ 167              		.loc 1 78 70 is_stmt 0 view .LVU30
+ 168 0000 30B5     		push	{r4, r5, lr}
+ 169              	.LCFI0:
+ 170              		.cfi_def_cfa_offset 12
+ 171              		.cfi_offset 4, -12
+ 172              		.cfi_offset 5, -8
+ 173              		.cfi_offset 14, -4
+ 174              	.LBB11:
+ 175              	.LBB10:
+  68:libscpi/src/fifo.c **** }
+ 176              		.loc 1 68 16 view .LVU31
+ 177 0002 B0F90420 		ldrsh	r2, [r0, #4]
+  68:libscpi/src/fifo.c **** }
+ 178              		.loc 1 68 31 view .LVU32
+ 179 0006 B0F90640 		ldrsh	r4, [r0, #6]
+ 180              	.LVL7:
+  68:libscpi/src/fifo.c **** }
+ 181              		.loc 1 68 31 view .LVU33
+ 182              	.LBE10:
+ 183              	.LBE11:
+ 184              		.loc 1 80 8 view .LVU34
+ 185 000a A242     		cmp	r2, r4
+ 186 000c 10D0     		beq	.L7
+  81:libscpi/src/fifo.c ****         return FALSE;
+  82:libscpi/src/fifo.c ****     }
+  83:libscpi/src/fifo.c ****     if (!value) {
+ 187              		.loc 1 83 5 is_stmt 1 view .LVU35
+ 188              		.loc 1 83 8 is_stmt 0 view .LVU36
+ 189 000e 89B1     		cbz	r1, .L8
+  84:libscpi/src/fifo.c ****         return FALSE;
+  85:libscpi/src/fifo.c ****     }
+  86:libscpi/src/fifo.c **** 
+  87:libscpi/src/fifo.c ****     fifo->data[fifo->wr] = *value;
+ 190              		.loc 1 87 5 is_stmt 1 view .LVU37
+ 191              		.loc 1 87 20 is_stmt 0 view .LVU38
+ 192 0010 B0F90030 		ldrsh	r3, [r0]
+ 193              		.loc 1 87 26 view .LVU39
+ 194 0014 8568     		ldr	r5, [r0, #8]
+ 195 0016 0988     		ldrh	r1, [r1]
+ 196              	.LVL8:
+ 197              		.loc 1 87 26 view .LVU40
+ 198 0018 25F81310 		strh	r1, [r5, r3, lsl #1]	@ movhi
+  88:libscpi/src/fifo.c ****     fifo->wr = (fifo->wr + 1) % (fifo->size);
+ARM GAS  /tmp/ccyR7gzH.s 			page 6
+
+
+ 199              		.loc 1 88 5 is_stmt 1 view .LVU41
+ 200              		.loc 1 88 26 is_stmt 0 view .LVU42
+ 201 001c 0133     		adds	r3, r3, #1
+  89:libscpi/src/fifo.c ****     fifo->count += 1;
+ 202              		.loc 1 89 17 view .LVU43
+ 203 001e 0132     		adds	r2, r2, #1
+  88:libscpi/src/fifo.c ****     fifo->wr = (fifo->wr + 1) % (fifo->size);
+ 204              		.loc 1 88 31 view .LVU44
+ 205 0020 93FBF4F1 		sdiv	r1, r3, r4
+ 206 0024 04FB1133 		mls	r3, r4, r1, r3
+  88:libscpi/src/fifo.c ****     fifo->wr = (fifo->wr + 1) % (fifo->size);
+ 207              		.loc 1 88 14 view .LVU45
+ 208 0028 0380     		strh	r3, [r0]	@ movhi
+ 209              		.loc 1 89 5 is_stmt 1 view .LVU46
+ 210              		.loc 1 89 17 is_stmt 0 view .LVU47
+ 211 002a 8280     		strh	r2, [r0, #4]	@ movhi
+  90:libscpi/src/fifo.c ****     return TRUE;
+ 212              		.loc 1 90 5 is_stmt 1 view .LVU48
+ 213              		.loc 1 90 12 is_stmt 0 view .LVU49
+ 214 002c 0120     		movs	r0, #1
+ 215              	.LVL9:
+ 216              	.L6:
+  91:libscpi/src/fifo.c **** }
+ 217              		.loc 1 91 1 view .LVU50
+ 218 002e 30BD     		pop	{r4, r5, pc}
+ 219              	.LVL10:
+ 220              	.L7:
+  81:libscpi/src/fifo.c ****     }
+ 221              		.loc 1 81 16 view .LVU51
+ 222 0030 0020     		movs	r0, #0
+ 223              	.LVL11:
+  81:libscpi/src/fifo.c ****     }
+ 224              		.loc 1 81 16 view .LVU52
+ 225 0032 FCE7     		b	.L6
+ 226              	.LVL12:
+ 227              	.L8:
+  81:libscpi/src/fifo.c ****     }
+ 228              		.loc 1 81 16 view .LVU53
+ 229 0034 0846     		mov	r0, r1
+ 230              	.LVL13:
+  81:libscpi/src/fifo.c ****     }
+ 231              		.loc 1 81 16 view .LVU54
+ 232 0036 FAE7     		b	.L6
+ 233              		.cfi_endproc
+ 234              	.LFE4:
+ 236              		.section	.text.fifo_remove,"ax",%progbits
+ 237              		.align	1
+ 238              		.global	fifo_remove
+ 239              		.hidden	fifo_remove
+ 240              		.syntax unified
+ 241              		.thumb
+ 242              		.thumb_func
+ 243              		.fpu fpv4-sp-d16
+ 245              	fifo_remove:
+ 246              	.LVL14:
+ 247              	.LFB5:
+  92:libscpi/src/fifo.c **** 
+ARM GAS  /tmp/ccyR7gzH.s 			page 7
+
+
+  93:libscpi/src/fifo.c **** /**
+  94:libscpi/src/fifo.c ****  * Remove element form fifo
+  95:libscpi/src/fifo.c ****  * @param fifo
+  96:libscpi/src/fifo.c ****  * @param value
+  97:libscpi/src/fifo.c ****  * @return FALSE - fifo is empty
+  98:libscpi/src/fifo.c ****  */
+  99:libscpi/src/fifo.c **** scpi_bool_t fifo_remove(scpi_fifo_t * fifo, scpi_error_t * value) {
+ 248              		.loc 1 99 67 is_stmt 1 view -0
+ 249              		.cfi_startproc
+ 250              		@ args = 0, pretend = 0, frame = 0
+ 251              		@ frame_needed = 0, uses_anonymous_args = 0
+ 100:libscpi/src/fifo.c ****     /* FIFO empty? */
+ 101:libscpi/src/fifo.c ****     if (fifo_is_empty(fifo)) {
+ 252              		.loc 1 101 5 view .LVU56
+ 253              	.LBB12:
+ 254              	.LBI12:
+  58:libscpi/src/fifo.c ****     return fifo->count == 0;
+ 255              		.loc 1 58 13 view .LVU57
+ 256              	.LBB13:
+  59:libscpi/src/fifo.c **** }
+ 257              		.loc 1 59 5 view .LVU58
+  59:libscpi/src/fifo.c **** }
+ 258              		.loc 1 59 16 is_stmt 0 view .LVU59
+ 259 0000 B0F90430 		ldrsh	r3, [r0, #4]
+ 260              	.LVL15:
+  59:libscpi/src/fifo.c **** }
+ 261              		.loc 1 59 16 view .LVU60
+ 262              	.LBE13:
+ 263              	.LBE12:
+  99:libscpi/src/fifo.c ****     /* FIFO empty? */
+ 264              		.loc 1 99 67 view .LVU61
+ 265 0004 10B5     		push	{r4, lr}
+ 266              	.LCFI1:
+ 267              		.cfi_def_cfa_offset 8
+ 268              		.cfi_offset 4, -8
+ 269              		.cfi_offset 14, -4
+ 270              		.loc 1 101 8 view .LVU62
+ 271 0006 93B1     		cbz	r3, .L12
+ 102:libscpi/src/fifo.c ****         return FALSE;
+ 103:libscpi/src/fifo.c ****     }
+ 104:libscpi/src/fifo.c **** 
+ 105:libscpi/src/fifo.c ****     if (value) {
+ 272              		.loc 1 105 5 is_stmt 1 view .LVU63
+ 273 0008 B0F90220 		ldrsh	r2, [r0, #2]
+ 274              		.loc 1 105 8 is_stmt 0 view .LVU64
+ 275 000c 19B1     		cbz	r1, .L11
+ 106:libscpi/src/fifo.c ****         *value = fifo->data[fifo->rd];
+ 276              		.loc 1 106 9 is_stmt 1 view .LVU65
+ 277              		.loc 1 106 16 is_stmt 0 view .LVU66
+ 278 000e 8468     		ldr	r4, [r0, #8]
+ 279 0010 34F81240 		ldrh	r4, [r4, r2, lsl #1]
+ 280 0014 0C80     		strh	r4, [r1]	@ movhi
+ 281              	.L11:
+ 107:libscpi/src/fifo.c ****     }
+ 108:libscpi/src/fifo.c **** 
+ 109:libscpi/src/fifo.c ****     fifo->rd = (fifo->rd + 1) % (fifo->size);
+ 282              		.loc 1 109 5 is_stmt 1 view .LVU67
+ARM GAS  /tmp/ccyR7gzH.s 			page 8
+
+
+ 283              		.loc 1 109 38 is_stmt 0 view .LVU68
+ 284 0016 B0F90640 		ldrsh	r4, [r0, #6]
+ 285              		.loc 1 109 26 view .LVU69
+ 286 001a 0132     		adds	r2, r2, #1
+ 110:libscpi/src/fifo.c ****     fifo->count -= 1;
+ 287              		.loc 1 110 17 view .LVU70
+ 288 001c 013B     		subs	r3, r3, #1
+ 109:libscpi/src/fifo.c ****     fifo->count -= 1;
+ 289              		.loc 1 109 31 view .LVU71
+ 290 001e 92FBF4F1 		sdiv	r1, r2, r4
+ 291              	.LVL16:
+ 109:libscpi/src/fifo.c ****     fifo->count -= 1;
+ 292              		.loc 1 109 31 view .LVU72
+ 293 0022 04FB1122 		mls	r2, r4, r1, r2
+ 109:libscpi/src/fifo.c ****     fifo->count -= 1;
+ 294              		.loc 1 109 14 view .LVU73
+ 295 0026 4280     		strh	r2, [r0, #2]	@ movhi
+ 296              		.loc 1 110 5 is_stmt 1 view .LVU74
+ 297              		.loc 1 110 17 is_stmt 0 view .LVU75
+ 298 0028 8380     		strh	r3, [r0, #4]	@ movhi
+ 111:libscpi/src/fifo.c **** 
+ 112:libscpi/src/fifo.c ****     return TRUE;
+ 299              		.loc 1 112 5 is_stmt 1 view .LVU76
+ 300              		.loc 1 112 12 is_stmt 0 view .LVU77
+ 301 002a 0120     		movs	r0, #1
+ 302              	.LVL17:
+ 303              	.L10:
+ 113:libscpi/src/fifo.c **** }
+ 304              		.loc 1 113 1 view .LVU78
+ 305 002c 10BD     		pop	{r4, pc}
+ 306              	.LVL18:
+ 307              	.L12:
+ 102:libscpi/src/fifo.c ****     }
+ 308              		.loc 1 102 16 view .LVU79
+ 309 002e 1846     		mov	r0, r3
+ 310              	.LVL19:
+ 102:libscpi/src/fifo.c ****     }
+ 311              		.loc 1 102 16 view .LVU80
+ 312 0030 FCE7     		b	.L10
+ 313              		.cfi_endproc
+ 314              	.LFE5:
+ 316              		.section	.text.fifo_remove_last,"ax",%progbits
+ 317              		.align	1
+ 318              		.global	fifo_remove_last
+ 319              		.hidden	fifo_remove_last
+ 320              		.syntax unified
+ 321              		.thumb
+ 322              		.thumb_func
+ 323              		.fpu fpv4-sp-d16
+ 325              	fifo_remove_last:
+ 326              	.LVL20:
+ 327              	.LFB6:
+ 114:libscpi/src/fifo.c **** 
+ 115:libscpi/src/fifo.c **** /**
+ 116:libscpi/src/fifo.c ****  * Remove last element from fifo
+ 117:libscpi/src/fifo.c ****  * @param fifo
+ 118:libscpi/src/fifo.c ****  * @param value
+ARM GAS  /tmp/ccyR7gzH.s 			page 9
+
+
+ 119:libscpi/src/fifo.c ****  * @return FALSE - fifo is empty
+ 120:libscpi/src/fifo.c ****  */
+ 121:libscpi/src/fifo.c **** scpi_bool_t fifo_remove_last(scpi_fifo_t * fifo, scpi_error_t * value) {
+ 328              		.loc 1 121 72 is_stmt 1 view -0
+ 329              		.cfi_startproc
+ 330              		@ args = 0, pretend = 0, frame = 0
+ 331              		@ frame_needed = 0, uses_anonymous_args = 0
+ 122:libscpi/src/fifo.c ****     /* FIFO empty? */
+ 123:libscpi/src/fifo.c ****     if (fifo_is_empty(fifo)) {
+ 332              		.loc 1 123 5 view .LVU82
+ 333              	.LBB14:
+ 334              	.LBI14:
+  58:libscpi/src/fifo.c ****     return fifo->count == 0;
+ 335              		.loc 1 58 13 view .LVU83
+ 336              	.LBB15:
+  59:libscpi/src/fifo.c **** }
+ 337              		.loc 1 59 5 view .LVU84
+  59:libscpi/src/fifo.c **** }
+ 338              		.loc 1 59 16 is_stmt 0 view .LVU85
+ 339 0000 B0F90430 		ldrsh	r3, [r0, #4]
+ 340              	.LVL21:
+  59:libscpi/src/fifo.c **** }
+ 341              		.loc 1 59 16 view .LVU86
+ 342              	.LBE15:
+ 343              	.LBE14:
+ 121:libscpi/src/fifo.c ****     /* FIFO empty? */
+ 344              		.loc 1 121 72 view .LVU87
+ 345 0004 30B5     		push	{r4, r5, lr}
+ 346              	.LCFI2:
+ 347              		.cfi_def_cfa_offset 12
+ 348              		.cfi_offset 4, -12
+ 349              		.cfi_offset 5, -8
+ 350              		.cfi_offset 14, -4
+ 351              		.loc 1 123 8 view .LVU88
+ 352 0006 9BB1     		cbz	r3, .L19
+ 124:libscpi/src/fifo.c ****         return FALSE;
+ 125:libscpi/src/fifo.c ****     }
+ 126:libscpi/src/fifo.c **** 
+ 127:libscpi/src/fifo.c ****     fifo->wr = (fifo->wr + fifo->size - 1) % (fifo->size);
+ 353              		.loc 1 127 5 is_stmt 1 view .LVU89
+ 354              		.loc 1 127 32 is_stmt 0 view .LVU90
+ 355 0008 B0F90650 		ldrsh	r5, [r0, #6]
+ 356              		.loc 1 127 21 view .LVU91
+ 357 000c B0F90020 		ldrsh	r2, [r0]
+ 358              		.loc 1 127 26 view .LVU92
+ 359 0010 2A44     		add	r2, r2, r5
+ 360              		.loc 1 127 39 view .LVU93
+ 361 0012 013A     		subs	r2, r2, #1
+ 362              		.loc 1 127 44 view .LVU94
+ 363 0014 92FBF5F4 		sdiv	r4, r2, r5
+ 364 0018 05FB1422 		mls	r2, r5, r4, r2
+ 365              		.loc 1 127 14 view .LVU95
+ 366 001c 0280     		strh	r2, [r0]	@ movhi
+ 128:libscpi/src/fifo.c **** 
+ 129:libscpi/src/fifo.c ****     if (value) {
+ 367              		.loc 1 129 5 is_stmt 1 view .LVU96
+ 368              		.loc 1 129 8 is_stmt 0 view .LVU97
+ARM GAS  /tmp/ccyR7gzH.s 			page 10
+
+
+ 369 001e 19B1     		cbz	r1, .L18
+ 130:libscpi/src/fifo.c ****         *value = fifo->data[fifo->wr];
+ 370              		.loc 1 130 9 is_stmt 1 view .LVU98
+ 371              		.loc 1 130 16 is_stmt 0 view .LVU99
+ 372 0020 8468     		ldr	r4, [r0, #8]
+ 373 0022 34F81220 		ldrh	r2, [r4, r2, lsl #1]
+ 374 0026 0A80     		strh	r2, [r1]	@ movhi
+ 375              	.L18:
+ 131:libscpi/src/fifo.c ****     }
+ 132:libscpi/src/fifo.c ****     fifo->count -= 1;
+ 376              		.loc 1 132 5 is_stmt 1 view .LVU100
+ 377              		.loc 1 132 17 is_stmt 0 view .LVU101
+ 378 0028 013B     		subs	r3, r3, #1
+ 379 002a 8380     		strh	r3, [r0, #4]	@ movhi
+ 133:libscpi/src/fifo.c **** 
+ 134:libscpi/src/fifo.c ****     return TRUE;
+ 380              		.loc 1 134 5 is_stmt 1 view .LVU102
+ 381              		.loc 1 134 12 is_stmt 0 view .LVU103
+ 382 002c 0120     		movs	r0, #1
+ 383              	.LVL22:
+ 384              	.L17:
+ 135:libscpi/src/fifo.c **** }
+ 385              		.loc 1 135 1 view .LVU104
+ 386 002e 30BD     		pop	{r4, r5, pc}
+ 387              	.LVL23:
+ 388              	.L19:
+ 124:libscpi/src/fifo.c ****     }
+ 389              		.loc 1 124 16 view .LVU105
+ 390 0030 1846     		mov	r0, r3
+ 391              	.LVL24:
+ 124:libscpi/src/fifo.c ****     }
+ 392              		.loc 1 124 16 view .LVU106
+ 393 0032 FCE7     		b	.L17
+ 394              		.cfi_endproc
+ 395              	.LFE6:
+ 397              		.section	.text.fifo_count,"ax",%progbits
+ 398              		.align	1
+ 399              		.global	fifo_count
+ 400              		.hidden	fifo_count
+ 401              		.syntax unified
+ 402              		.thumb
+ 403              		.thumb_func
+ 404              		.fpu fpv4-sp-d16
+ 406              	fifo_count:
+ 407              	.LVL25:
+ 408              	.LFB7:
+ 136:libscpi/src/fifo.c **** 
+ 137:libscpi/src/fifo.c **** /**
+ 138:libscpi/src/fifo.c ****  * Retrive number of elements in fifo
+ 139:libscpi/src/fifo.c ****  * @param fifo
+ 140:libscpi/src/fifo.c ****  * @param value
+ 141:libscpi/src/fifo.c ****  * @return
+ 142:libscpi/src/fifo.c ****  */
+ 143:libscpi/src/fifo.c **** scpi_bool_t fifo_count(scpi_fifo_t * fifo, int16_t * value) {
+ 409              		.loc 1 143 61 is_stmt 1 view -0
+ 410              		.cfi_startproc
+ 411              		@ args = 0, pretend = 0, frame = 0
+ARM GAS  /tmp/ccyR7gzH.s 			page 11
+
+
+ 412              		@ frame_needed = 0, uses_anonymous_args = 0
+ 413              		@ link register save eliminated.
+ 144:libscpi/src/fifo.c ****     *value = fifo->count;
+ 414              		.loc 1 144 5 view .LVU108
+ 415              		.loc 1 144 18 is_stmt 0 view .LVU109
+ 416 0000 B0F90430 		ldrsh	r3, [r0, #4]
+ 417              		.loc 1 144 12 view .LVU110
+ 418 0004 0B80     		strh	r3, [r1]	@ movhi
+ 145:libscpi/src/fifo.c ****     return TRUE;
+ 419              		.loc 1 145 5 is_stmt 1 view .LVU111
+ 146:libscpi/src/fifo.c **** }
+ 420              		.loc 1 146 1 is_stmt 0 view .LVU112
+ 421 0006 0120     		movs	r0, #1
+ 422              	.LVL26:
+ 423              		.loc 1 146 1 view .LVU113
+ 424 0008 7047     		bx	lr
+ 425              		.cfi_endproc
+ 426              	.LFE7:
+ 428              		.text
+ 429              	.Letext0:
+ 430              		.file 2 "/usr/lib/gcc/arm-none-eabi/9.2.1/include/stdint.h"
+ 431              		.file 3 "libscpi/inc/scpi/types.h"
+ARM GAS  /tmp/ccyR7gzH.s 			page 12
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 fifo.c
+     /tmp/ccyR7gzH.s:18     .text.fifo_init:0000000000000000 $t
+     /tmp/ccyR7gzH.s:27     .text.fifo_init:0000000000000000 fifo_init
+     /tmp/ccyR7gzH.s:56     .text.fifo_clear:0000000000000000 $t
+     /tmp/ccyR7gzH.s:64     .text.fifo_clear:0000000000000000 fifo_clear
+     /tmp/ccyR7gzH.s:86     .text.fifo_is_empty:0000000000000000 $t
+     /tmp/ccyR7gzH.s:94     .text.fifo_is_empty:0000000000000000 fifo_is_empty
+     /tmp/ccyR7gzH.s:114    .text.fifo_is_full:0000000000000000 $t
+     /tmp/ccyR7gzH.s:122    .text.fifo_is_full:0000000000000000 fifo_is_full
+     /tmp/ccyR7gzH.s:144    .text.fifo_add:0000000000000000 $t
+     /tmp/ccyR7gzH.s:152    .text.fifo_add:0000000000000000 fifo_add
+     /tmp/ccyR7gzH.s:237    .text.fifo_remove:0000000000000000 $t
+     /tmp/ccyR7gzH.s:245    .text.fifo_remove:0000000000000000 fifo_remove
+     /tmp/ccyR7gzH.s:317    .text.fifo_remove_last:0000000000000000 $t
+     /tmp/ccyR7gzH.s:325    .text.fifo_remove_last:0000000000000000 fifo_remove_last
+     /tmp/ccyR7gzH.s:398    .text.fifo_count:0000000000000000 $t
+     /tmp/ccyR7gzH.s:406    .text.fifo_count:0000000000000000 fifo_count
+
+NO UNDEFINED SYMBOLS
