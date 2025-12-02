@@ -11,7 +11,7 @@ A software-defined 6.78 MHz GaN power amplifier development kit for wireless pow
 - **GaN Half-Bridge** — High-efficiency switching with minimal gate charge losses
 - **Software-Defined RF Generation** — Real-time frequency and deadtime adjustment via software
 - **STM32G4 HRTIM** — 184 ps timing resolution (5.4 GHz effective clock with ×32 multiplier)
-- **Integrated SEPIC Converter** — Programmable amplifier supply voltage (5–30V) with current limiting
+- **Integrated SEPIC Converter** — Programmable amplifier supply voltage (0–20V) with current limiting
 - **SCPI over USB CDC** — Standard instrument control protocol for automated test benches
 - **OLED Status Display** — Real-time frequency, power, and VSWR monitoring
 - **Analog Knob Inputs** — Two potentiometers for manual frequency/power adjustment
