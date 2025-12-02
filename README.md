@@ -263,8 +263,10 @@ st-flash write build/main.bin 0x8000000
 
 ## License
 
-Hardware design files: [Specify your license]  
-Firmware: BSD 3-Clause (STM32 HAL), BSD 2-Clause (SCPI library)
+Hardware design files: MIT license 
+Firmware: MIT license 
+Software: MIT license
+3rd party Firmware: BSD 3-Clause (STM32 HAL), BSD 2-Clause (SCPI library)
 
 ## Author
 
