@@ -207,12 +207,11 @@ The amplifier implements SCPI (Standard Commands for Programmable Instruments) o
 | `SYSTem:VERSion?` | Query SCPI version |
 | `STATus:QUEStionable?` | Query questionable status register |
 
-## Python Examples
-
 
 ## Python Examples
 
 Example scripts are provided in the [`software/`](software/) directory demonstrating SCPI communication via PyVISA.
+
 Thanks to SCPI integration for both setting parameters and reading output power, it is very easy to build custom testbenches to characterize ie. efficiency over frequency and plot the results using matplotlib or similar.
 
 ### Basic Control — [`control.py`](software/control.py)
@@ -222,15 +221,6 @@ This script provides interactive control using the two onboard potentiometers. I
 **Usage:**
 ```bash
 python software/control.py
-```
-
-### Communication Speed Test — [`speedtest.py`](software/speedtest.py)
-
-A simple benchmark that measures SCPI query throughput by executing 100 voltage queries in a loop and reporting the elapsed time. Useful for characterizing USB CDC latency and determining maximum update rates for closed-loop control applications.
-
-**Usage:**
-```bash
-python software/speedtest.py
 ```
 
 ### Custom Scripts
