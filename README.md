@@ -44,15 +44,15 @@ A software-defined 6.78 MHz GaN power amplifier development kit for wireless pow
 
 ## PCB Design
 
-### Board Layout
-
-![PCB Layout](media/layout.png)
-*Full board layout showing component placement: USB-C input (left), OLED display area, SEPIC converter (center), STM32G4 MCU, GaN half-bridge, and output matching network (right)*
-
 ### 3D Rendering
 
 ![3D PCB Render](media/pcb3d.png)
 *3D render of the assembled board with all components*
+
+### Board Layout
+
+![PCB Layout](media/layout.png)
+*Full board layout showing component placement: USB-C input (left), OLED display, SEPIC converter (top right), STM32G4 MCU, GaN half-bridge (center right), and output matching network (bottom right)*
 
 ### Critical Design: Ground Plane and Return Path
 
