@@ -209,9 +209,42 @@ The amplifier implements SCPI (Standard Commands for Programmable Instruments) o
 
 ## Python Examples
 
-### Basic Control
 
+## Python Examples
 
+Example scripts are provided in the [`software/`](software/) directory demonstrating SCPI communication via PyVISA.
+Thanks to SCPI integration for both setting parameters and reading output power, it is very easy to build custom testbenches to characterize ie. efficiency over frequency and plot the results using matplotlib or similar.
+
+### Basic Control — [`control.py`](software/control.py)
+
+This script provides interactive control using the two onboard potentiometers. It continuously reads the knob positions via `MEAS:VOLT:DC:CONTrol?`, maps them to frequency (1–8 MHz) and output voltage (0–30V), and updates the amplifier settings in real-time. The display shows actual measured values including calculated input power.
+
+**Usage:**
+```bash
+python software/control.py
+```
+
+### Communication Speed Test — [`speedtest.py`](software/speedtest.py)
+
+A simple benchmark that measures SCPI query throughput by executing 100 voltage queries in a loop and reporting the elapsed time. Useful for characterizing USB CDC latency and determining maximum update rates for closed-loop control applications.
+
+**Usage:**
+```bash
+python software/speedtest.py
+```
+
+### Custom Scripts
+
+For custom automation, connect using PyVISA with the `@py` backend:
+
+```python
+import pyvisa as visa
+rm = visa.ResourceManager('@py')
+amp = rm.open_resource("ASRL/dev/ttyACM0::INSTR")
+print(amp.query("*IDN?"))
+```
+
+On Windows, the resource string will be `ASRL<n>::INSTR` where `<n>` is the COM port number assigned to the USB CDC device.
 
 ## Building the Firmware
 
