@@ -13,6 +13,7 @@ I finished this project in winter 2020, and it became an invaluable tool through
 
 - **6.78 MHz ISM Band Operation** — Optimized for the AirFuel/Qi extended power profile frequency band
 - **Software-Defined RF Generation** — Real-time frequency and deadtime adjustment via software
+- **STM32G4 HRTIM** — Built around the STM32G474 with 184 ps RF PWM resolution (5.4 GHz effective clock)
 - **Integrated SEPIC Converter** — Programmable amplifier supply voltage (0–20V) with USB / input current limiting
 - **SCPI over USB CDC** — Standard instrument control protocol for automated test benches
 - **OLED Status Display** — Real-time frequency, power, and VSWR monitoring
