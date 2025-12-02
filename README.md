@@ -1,7 +1,5 @@
 # GaN Class-D Wireless Power Amplifier
 
-A software-defined 6.78 MHz GaN power amplifier development kit for wireless power transfer (WPT) research and antenna tuning. Built around the STM32G4 microcontroller with its 5.4 GHz / 184 ps high-resolution timer (HRTIM).
-
 I designed this board because I wanted a signal generator that was more capable than just generating a static waveform.
 For familiarizing myself with wireless power transfer and getting a feeling for antenna and magnetic design, I wanted a source-meausure-unit (SMU) for RF,
 something that could generate and also measure RF output. I also wanted all settings and measurements to be easily controllable and readable such that I could easily script testbenches in python for plotting parameter sweeps, or prototype control loops critical for real-world WPT like resonance tracking or constant output power control.
