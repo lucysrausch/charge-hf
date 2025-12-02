@@ -1,6 +1,12 @@
 # GaN Class-D Wireless Power Amplifier
 
-A software-defined 6.78 MHz GaN power amplifier development kit for wireless power transfer (WPT) research and antenna tuning. Built around the STM32G4 microcontroller with its 5.4 GHz high-resolution timer (HRTIM), enabling sub-nanosecond PWM resolution for precise control of the Class-D switching stage.
+A software-defined 6.78 MHz GaN power amplifier development kit for wireless power transfer (WPT) research and antenna tuning. Built around the STM32G4 microcontroller with its 5.4 GHz / 184 ps high-resolution timer (HRTIM).
+
+I designed this board because I wanted a signal generator that was more capable than just generating a static waveform.
+For familiarizing myself with wireless power transfer and getting a feeling for antenna and magnetic design, I wanted a source-meausure-unit (SMU) for RF,
+something that could generate and also measure RF output. I also wanted all settings and measurements to be easily controllable and readable such that I could easily script testbenches in python for plotting parameter sweeps, or prototype control loops critical for real-world WPT like resonance tracking or constant output power control.
+
+I finished this project in winter 2020, and it became an invaluable tool throughout 2021 for designing a custom wireless charging solution.
 
 ![Assembled Dev Board](media/3831.jpeg)
 *Assembled development board showing real-time status on OLED display: frequency, RF power, and VSWR measurements*
@@ -8,14 +14,11 @@ A software-defined 6.78 MHz GaN power amplifier development kit for wireless pow
 ## Features
 
 - **6.78 MHz ISM Band Operation** — Optimized for the AirFuel/Qi extended power profile frequency band
-- **GaN Half-Bridge** — High-efficiency switching with minimal gate charge losses
 - **Software-Defined RF Generation** — Real-time frequency and deadtime adjustment via software
-- **STM32G4 HRTIM** — 184 ps timing resolution (5.4 GHz effective clock with ×32 multiplier)
-- **Integrated SEPIC Converter** — Programmable amplifier supply voltage (0–20V) with current limiting
+- **Integrated SEPIC Converter** — Programmable amplifier supply voltage (0–20V) with USB / input current limiting
 - **SCPI over USB CDC** — Standard instrument control protocol for automated test benches
 - **OLED Status Display** — Real-time frequency, power, and VSWR monitoring
-- **Analog Knob Inputs** — Two potentiometers for manual frequency/power adjustment
-- **SMA RF Output** — optionally matched output for antenna connection
+- **Analog Knob Inputs** — Two potentiometers which can be read via SCPI to control any parameter. (or you can use these ADC inputs to measure ie. voltage and current in the WPT receiver and plot them along input power for efficiency sweeps
 
 ## Applications
 
