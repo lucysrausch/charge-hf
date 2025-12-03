@@ -6,8 +6,9 @@ something that could generate and also measure RF output. I also wanted all sett
 
 I finished this project in winter 2020, and it became an invaluable tool throughout 2021 for designing a custom wireless charging solution.
 
-![Assembled Dev Board](media/3831.jpeg)
-*Assembled development board showing real-time status on OLED display: frequency, RF power, and VSWR measurements*
+![WPT Demo Setup](media/3838.jpeg)
+*Assembled development board showing real-time status on OLED display: frequency, RF power, and VSWR measurements.*
+*Demonstration setup: PCB spiral coil antennas (transmit and receive) wirelessly powering an LED strip at 6.78 MHz.
 
 ## Features
 
@@ -25,11 +26,6 @@ I finished this project in winter 2020, and it became an invaluable tool through
 - Antenna impedance matching and tuning, efficiency testing
 - Inductive heating experiments, plasma generation
 - Generic educational RF / power electronics platform
-
-## Wireless Power Demo
-
-![WPT Demo Setup](media/3838.jpeg)
-*Demonstration setup: PCB spiral coil antennas (transmit and receive) wirelessly powering an LED strip at 6.78 MHz*
 
 ## Hardware Specifications
 
