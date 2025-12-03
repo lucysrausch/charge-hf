@@ -258,6 +258,12 @@ openocd -f interface/stlink.cfg -f target/stm32g4x.cfg -c "program build/main.el
 st-flash write build/main.bin 0x8000000
 ```
 
+### Known bugs
+
+The board features a push button connected to the boot select pin of the STM32. In theory, this would allow the STM32 to enter DFU mode and allow to flash the board without the need for a programmer. Unfortunatly, despite a strong pull-down resistor, the GPIO connected to the gate driver for the SEPIC DC-DC seems to go high when entering DFU. This turns on Q1, but without PWM, it just shorts the USB input and triggers an overcurrent event on the USB port the device is plugged into.
+
+The workaround is to simply not assemble this button, and always flash the board via SWD.
+
 ## License
 
 - Hardware design files: MIT license 
